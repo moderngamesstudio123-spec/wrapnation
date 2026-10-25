@@ -4,6 +4,7 @@ import { createOrderSchema } from '@/lib/validation/schemas';
 import { checkRateLimit } from '@/lib/security/rate-limit';
 import { requireAuth } from '@/lib/auth/session';
 import prisma from '@/lib/db';
+import { getAllFallbackOrders } from '@/server/services/orderStore';
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1';
@@ -125,6 +126,7 @@ export async function GET(req: NextRequest) {
     whereClause.status = statusParam;
   }
 
+  let dbOrders: any[] = [];
   try {
     const orders = await prisma.order.findMany({
       where: whereClause,
@@ -135,10 +137,28 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: 'desc' },
       take: 100,
     });
-
-    return NextResponse.json({ orders });
+    dbOrders = orders;
   } catch (err) {
     console.warn('Database connection warning in GET /api/orders:', err);
-    return NextResponse.json({ orders: [] });
   }
+
+  // Merge with resilient fallback orders store so staff dashboard ALWAYS sees live orders
+  const fallbackOrders = getAllFallbackOrders();
+  const map = new Map<string, any>();
+  for (const o of fallbackOrders) {
+    map.set(o.id, o);
+  }
+  for (const o of dbOrders) {
+    map.set(o.id, o);
+  }
+
+  let finalOrders = Array.from(map.values()).sort(
+    (a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+
+  if (statusParam) {
+    finalOrders = finalOrders.filter((o: any) => o.status === statusParam);
+  }
+
+  return NextResponse.json({ orders: finalOrders });
 }

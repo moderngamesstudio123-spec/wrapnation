@@ -10,6 +10,8 @@ import { OrderStatus, PaymentStatus, PaymentMethod, OrderType, User } from '@pri
 import { DEFAULT_CATEGORIES } from './defaultMenu';
 import {
   saveFallbackOrder,
+  getFallbackOrder,
+  updateFallbackOrder,
   getNextOrderNumber,
   setTableOccupied,
   vacateTableStore,
@@ -313,10 +315,17 @@ export async function markOrderPaid(
   staffUser: User,
   ip?: string
 ) {
-  const order = await prisma.order.findUnique({
-    where: { id: orderId },
-    include: { payments: true },
-  });
+  let order: any = null;
+  try {
+    order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { payments: true },
+    });
+  } catch {}
+
+  if (!order) {
+    order = getFallbackOrder(orderId);
+  }
 
   if (!order) {
     throw new Error('Order not found');
@@ -364,30 +373,47 @@ export async function markOrderPaid(
   }
 
   // 3. Complete payment in a transaction
-  const payment = await prisma.$transaction(async (tx) => {
-    const p = await tx.payment.create({
-      data: {
-        orderId: order.id,
-        amount: order.total,
-        method: params.method === 'CASH' ? PaymentMethod.CASH : PaymentMethod.UPI,
-        status: PaymentStatus.PAID,
-        utr: cleanUtr,
-        confirmedById: staffUser.id,
-        notes: params.notes || null,
-      },
-    });
+  let payment: any = null;
+  try {
+    payment = await prisma.$transaction(async (tx) => {
+      const p = await tx.payment.create({
+        data: {
+          orderId: order.id,
+          amount: order.total,
+          method: params.method === 'CASH' ? PaymentMethod.CASH : PaymentMethod.UPI,
+          status: PaymentStatus.PAID,
+          utr: cleanUtr,
+          confirmedById: staffUser.id,
+          notes: params.notes || null,
+        },
+      });
 
-    await tx.order.update({
-      where: { id: order.id },
-      data: {
-        status: OrderStatus.PREPARING, // moves directly to kitchen preparation
-        paymentStatus: PaymentStatus.PAID,
-        paymentMethod: params.method === 'CASH' ? PaymentMethod.CASH : PaymentMethod.UPI,
-      },
-    });
+      await tx.order.update({
+        where: { id: order.id },
+        data: {
+          status: OrderStatus.PREPARING, // moves directly to kitchen preparation
+          paymentStatus: PaymentStatus.PAID,
+          paymentMethod: params.method === 'CASH' ? PaymentMethod.CASH : PaymentMethod.UPI,
+        },
+      });
 
-    return p;
-  });
+      return p;
+    });
+  } catch (txErr) {
+    console.warn('Database error in markOrderPaid, updating fallback store:', txErr);
+    updateFallbackOrder(order.id, {
+      status: 'PREPARING',
+      paymentStatus: 'PAID',
+      paymentMethod: params.method === 'CASH' ? 'CASH' : 'UPI',
+    });
+    payment = {
+      id: `pay-${order.id}`,
+      amount: order.total,
+      method: params.method,
+      status: 'PAID',
+      utr: cleanUtr,
+    };
+  }
 
   // 4. Trigger 80mm thermal slips printing ONLY AFTER verified payment!
   await queueOrderPrintJobs(order.id);
@@ -450,18 +476,35 @@ export async function updateOrderStatus(
   staffUser: User,
   ip?: string
 ) {
-  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  let order: any = null;
+  try {
+    order = await prisma.order.findUnique({ where: { id: orderId } });
+  } catch {}
+
+  if (!order) {
+    order = getFallbackOrder(orderId);
+  }
+
   if (!order) {
     throw new Error('Order not found');
   }
 
-  const updated = await prisma.order.update({
-    where: { id: orderId },
-    data: {
+  let updated: any = null;
+  try {
+    updated = await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        status: newStatus,
+        completedAt: newStatus === OrderStatus.COMPLETED ? new Date() : undefined,
+      },
+    });
+  } catch (err) {
+    console.warn('Database error in updateOrderStatus, updating fallback store:', err);
+    updated = updateFallbackOrder(orderId, {
       status: newStatus,
-      completedAt: newStatus === OrderStatus.COMPLETED ? new Date() : undefined,
-    },
-  });
+      completedAt: newStatus === OrderStatus.COMPLETED ? new Date() : null,
+    }) || { ...order, status: newStatus };
+  }
 
   // If order transitioned to READY, send WhatsApp notification
   if (newStatus === OrderStatus.READY) {
