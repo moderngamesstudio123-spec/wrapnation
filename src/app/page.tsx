@@ -19,7 +19,7 @@ export default async function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] text-neutral-900 flex flex-col justify-between selection:bg-amber-400 selection:text-neutral-950">
+    <div className="min-h-screen bg-[#FAF7F2] text-neutral-900 flex flex-col justify-between selection:bg-amber-400 selection:text-neutral-950">
       {/* Header */}
       <header className="p-4 sm:p-6 border-b border-neutral-200 bg-white/90 backdrop-blur-md sticky top-0 z-20 shadow-xs">
         <div className="max-w-4xl mx-auto flex items-center justify-between">

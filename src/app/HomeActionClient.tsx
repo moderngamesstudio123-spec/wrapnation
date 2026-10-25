@@ -17,7 +17,7 @@ export default function HomeActionClient({ tables, shopPhone }: HomeActionClient
   const [isTableModalOpen, setIsTableModalOpen] = useState(false);
 
   // Clean phone number for WhatsApp wa.me link
-  const cleanPhone = shopPhone.replace(/\D/g, '') || '919876543210';
+  const cleanPhone = shopPhone.replace(/\D/g, '') || '918686878675';
   const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(
     'Hi Wrap Nation! I want to order food or view the menu.'
   )}`;

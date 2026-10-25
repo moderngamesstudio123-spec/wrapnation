@@ -19,7 +19,7 @@ export default function TakeawayEntryPage() {
   }, [router, setTableInfo]);
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] text-neutral-900 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-[#FAF7F2] text-neutral-900 flex flex-col items-center justify-center p-4">
       <div className="text-center space-y-4 max-w-sm">
         <div className="w-16 h-16 rounded-2xl bg-amber-400 text-neutral-950 flex items-center justify-center mx-auto shadow-md animate-pulse">
           <ShoppingBag className="w-8 h-8" />

@@ -25,8 +25,8 @@ async function main() {
     'Combo Fried Chicken 8 pcs + Fries + Cool Drink': '/images/food/fried-chicken.jpg',
 
     // Snacks
-    'French Fries': 'https://images.unsplash.com/photo-1576107232684-1279f3908594?auto=format&fit=crop&w=600&q=80',
-    'Peri Peri Fries': 'https://images.unsplash.com/photo-1576107232684-1279f3908594?auto=format&fit=crop&w=600&q=80',
+    'French Fries': '/images/food/french-fries.jpg',
+    'Peri Peri Fries': '/images/food/peri-peri-fries.jpg',
     'Chicken Nugget 6 pcs': 'https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=600&q=80',
     'Chicken Nugget 12 pcs': 'https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=600&q=80',
     'Chicken Strips 4 pcs': '/images/food/fried-chicken.jpg',

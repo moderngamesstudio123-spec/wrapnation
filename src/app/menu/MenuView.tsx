@@ -117,7 +117,7 @@ export default function MenuView({
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] text-neutral-900 pb-28">
+    <div className="min-h-screen bg-[#FAF7F2] text-neutral-900 pb-28">
       {/* 1. Header Bar */}
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-neutral-200/90 shadow-xs">
         <div className="max-w-2xl mx-auto px-4 py-3 space-y-3">
@@ -262,7 +262,7 @@ export default function MenuView({
 
       {/* Floating WhatsApp Help Button */}
       <a
-        href={`https://wa.me/${(shopPhone || '919876543210').replace(/\D/g, '')}?text=${encodeURIComponent('Hi Wrap Nation! I need help with my menu order.')}`}
+        href={`https://wa.me/${(shopPhone || '918686878675').replace(/\D/g, '')}?text=${encodeURIComponent('Hi Wrap Nation! I need help with my menu order.')}`}
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-24 right-4 z-40 py-2.5 px-4 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-xl flex items-center gap-2 transition-all hover:scale-105 active:scale-95 border border-emerald-500"

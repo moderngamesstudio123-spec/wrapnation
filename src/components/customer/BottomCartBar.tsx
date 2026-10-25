@@ -12,7 +12,7 @@ export default function BottomCartBar() {
   if (totalItemsCount === 0) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 p-3 sm:p-4 bg-gradient-to-t from-[#F8F9FA] via-[#F8F9FA]/95 to-transparent pointer-events-none">
+    <div className="fixed bottom-0 left-0 right-0 z-40 p-3 sm:p-4 bg-gradient-to-t from-[#FAF7F2] via-[#FAF7F2]/95 to-transparent pointer-events-none">
       <div className="max-w-md mx-auto pointer-events-auto">
         <Link
           href="/cart"

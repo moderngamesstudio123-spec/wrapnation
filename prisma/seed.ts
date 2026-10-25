@@ -11,7 +11,7 @@ async function main() {
   const defaultSettings: Record<string, string> = {
     shop_name: 'Wrap Nation',
     shop_address: 'Shop 4, Ground Floor, Food Street, Indiranagar, Bengaluru, Karnataka 560038',
-    shop_phone: '+91 98765 43210',
+    shop_phone: '+91 86868 78675',
     gst_enabled: 'false',
     gstin: '',
     gst_percentage: '5',

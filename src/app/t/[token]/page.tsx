@@ -14,7 +14,7 @@ export default async function TableQRPage({
 
   if (!verification.valid || !verification.tableNumber) {
     return (
-      <div className="min-h-screen bg-[#F8F9FA] text-neutral-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#FAF7F2] text-neutral-900 flex items-center justify-center p-4">
         <div className="max-w-md w-full p-6 rounded-2xl bg-white border border-rose-200 text-center space-y-4 shadow-xl">
           <div className="w-14 h-14 rounded-full bg-rose-50 border border-rose-200 text-rose-600 mx-auto flex items-center justify-center">
             <AlertCircle className="w-8 h-8" />

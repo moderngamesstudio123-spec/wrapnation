@@ -50,7 +50,7 @@ export default function ChangePasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] text-neutral-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#FAF7F2] text-neutral-900 flex items-center justify-center p-4">
       <div className="max-w-md w-full p-8 rounded-3xl bg-white border border-neutral-200/80 shadow-xl space-y-6">
         <div className="text-center space-y-2">
           <div className="w-14 h-14 rounded-2xl bg-amber-400 text-neutral-950 flex items-center justify-center mx-auto shadow-md">

@@ -5,14 +5,14 @@
     --brand-yellow: #FFCC00;
     --brand-black: #0A0A0A;
     --brand-surface: #FFFFFF;
-    --brand-surface-elevated: #F8F9FA;
+    --brand-surface-elevated: #FAF7F2;
     --brand-border: #E5E7EB;
     --brand-red: #E11D48;
     --brand-green: #10B981;
   }
 
   body {
-    background-color: #F8F9FA;
+    background-color: #FAF7F2;
     color: #111827;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     -webkit-tap-highlight-color: transparent;

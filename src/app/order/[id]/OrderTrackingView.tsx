@@ -154,7 +154,7 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F8F9FA] text-neutral-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#FAF7F2] text-neutral-900 flex items-center justify-center p-4">
         <div className="text-center space-y-3">
           <Loader2 className="w-8 h-8 animate-spin text-amber-500 mx-auto" />
           <p className="text-sm text-neutral-500 font-medium">Loading order status...</p>
@@ -165,7 +165,7 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
 
   if (error || !order) {
     return (
-      <div className="min-h-screen bg-[#F8F9FA] text-neutral-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#FAF7F2] text-neutral-900 flex items-center justify-center p-4">
         <div className="text-center space-y-4 max-w-sm">
           <h2 className="text-xl font-bold text-rose-600">Unable to find order</h2>
           <p className="text-sm text-neutral-600">{error || 'Please check your order link.'}</p>
@@ -192,7 +192,7 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
       : `#${order.orderNumber}`;
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] text-neutral-900 pb-20">
+    <div className="min-h-screen bg-[#FAF7F2] text-neutral-900 pb-20">
       {/* Top Header */}
       <header className="bg-white border-b border-neutral-200/80 p-4 sticky top-0 z-30 shadow-xs">
         <div className="max-w-xl mx-auto flex items-center justify-between">
@@ -534,7 +534,7 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
           {/* Action Buttons: WhatsApp Slip & Print */}
           <div className="pt-2 flex flex-col sm:flex-row gap-2 border-t border-neutral-200">
             <a
-              href={`https://wa.me/${(shop?.phone || '919876543210').replace(/\D/g, '')}?text=${encodeURIComponent(
+              href={`https://wa.me/${(shop?.phone || '918686878675').replace(/\D/g, '')}?text=${encodeURIComponent(
                 `*Wrap Nation Order Receipt*\nOrder Token: ${orderTokenLabel}\nType: ${order.type}\nTotal: ${order.totalFormatted}\nPayment: ${order.paymentMethod} (${order.paymentStatus})\n\nItems:\n${order.orderItems.map((i) => `• ${i.itemName} x${i.quantity} (${i.subtotalFormatted})`).join('\n')}\n\nTrack order: ${typeof window !== 'undefined' ? window.location.href : ''}`
               )}`}
               target="_blank"

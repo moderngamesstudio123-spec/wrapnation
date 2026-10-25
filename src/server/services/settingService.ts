@@ -31,7 +31,7 @@ export async function getSettings(): Promise<ShopSettings> {
   return {
     shopName: map['shop_name'] || 'Wrap Nation',
     shopAddress: map['shop_address'] || 'Shop 4, Food Street, Bengaluru',
-    shopPhone: map['shop_phone'] || '+91 98765 43210',
+    shopPhone: map['shop_phone'] || '+91 86868 78675',
     gstEnabled: map['gst_enabled'] === 'true',
     gstin: map['gstin'] || '',
     gstPercentage: parseFloat(map['gst_percentage'] || '5'),

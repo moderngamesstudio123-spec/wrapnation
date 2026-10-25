@@ -112,7 +112,7 @@ export default function CartPage() {
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-[#F8F9FA] text-neutral-900 flex flex-col items-center justify-center p-4">
+      <div className="min-h-screen bg-[#FAF7F2] text-neutral-900 flex flex-col items-center justify-center p-4">
         <div className="text-center space-y-4 max-w-sm">
           <div className="w-16 h-16 rounded-full bg-white border border-neutral-200 shadow-sm flex items-center justify-center mx-auto text-neutral-400">
             <ShoppingBag className="w-8 h-8" />
@@ -133,7 +133,7 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] text-neutral-900 pb-32">
+    <div className="min-h-screen bg-[#FAF7F2] text-neutral-900 pb-32">
       {/* Top Header */}
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-neutral-200 shadow-xs">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
