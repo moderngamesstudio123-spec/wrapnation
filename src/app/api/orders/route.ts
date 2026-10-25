@@ -30,24 +30,73 @@ export async function POST(req: NextRequest) {
 
   try {
     const order = await createOrder(parseResult.data, ip);
-    return NextResponse.json({
+    const orderItems = (order.orderItems || []).map((i: any) => ({
+      id: i.id,
+      itemName: i.itemName,
+      variantName: i.variantName || null,
+      unitPrice: i.unitPrice,
+      unitPriceFormatted: `Rs ${Math.round(i.unitPrice / 100)}`,
+      quantity: i.quantity,
+      subtotal: i.subtotal,
+      subtotalFormatted: `Rs ${Math.round(i.subtotal / 100)}`,
+      addOns: (() => {
+        try {
+          return i.addOnsJson ? JSON.parse(i.addOnsJson) : [];
+        } catch {
+          return [];
+        }
+      })(),
+      notes: i.notes || null,
+    }));
+
+    const responseOrder = {
+      id: order.id,
+      orderNumber: order.orderNumber,
+      takeawayToken: order.takeawayToken,
+      type: order.type,
+      tableNumber: order.tableNumber,
+      status: order.status,
+      paymentStatus: order.paymentStatus,
+      paymentMethod: order.paymentMethod,
+      customerName: order.customerName,
+      customerPhone: order.customerPhone,
+      customerUtrHint: order.customerUtrHint,
+      cookingNote: order.cookingNote,
+      subtotal: order.subtotal,
+      tax: order.tax,
+      total: order.total,
+      subtotalFormatted: `Rs ${Math.round(order.subtotal / 100)}`,
+      taxFormatted: `Rs ${Math.round(order.tax / 100)}`,
+      totalFormatted: `Rs ${Math.round(order.total / 100)}`,
+      expiresAt: order.expiresAt,
+      createdAt: order.createdAt,
+      orderItems,
+    };
+
+    const res = NextResponse.json({
       success: true,
-      order: {
-        id: order.id,
-        orderNumber: order.orderNumber,
-        takeawayToken: order.takeawayToken,
-        type: order.type,
-        tableNumber: order.tableNumber,
-        status: order.status,
-        paymentStatus: order.paymentStatus,
-        paymentMethod: order.paymentMethod,
-        subtotal: order.subtotal,
-        tax: order.tax,
-        total: order.total,
-        expiresAt: order.expiresAt,
-        createdAt: order.createdAt,
-      },
+      order: responseOrder,
     });
+
+    try {
+      const serialized = JSON.stringify(order);
+      res.cookies.set(`wn_order_${order.id}`, serialized, {
+        path: '/',
+        httpOnly: true,
+        secure: true,
+        maxAge: 86400,
+        sameSite: 'lax',
+      });
+      res.cookies.set('wn_last_order', serialized, {
+        path: '/',
+        httpOnly: true,
+        secure: true,
+        maxAge: 86400,
+        sameSite: 'lax',
+      });
+    } catch {}
+
+    return res;
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Failed to create order';
     return NextResponse.json({ error: message }, { status: 400 });

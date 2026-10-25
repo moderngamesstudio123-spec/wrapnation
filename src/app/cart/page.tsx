@@ -118,6 +118,12 @@ export default function CartPage() {
         );
       } catch {}
 
+      // Save order in sessionStorage and localStorage for resilient client-side tracking across serverless instances
+      try {
+        sessionStorage.setItem('wrapnation_order_' + data.order.id, JSON.stringify(data.order));
+        localStorage.setItem('wrapnation_order_' + data.order.id, JSON.stringify(data.order));
+      } catch {}
+
       // Clear cart and redirect to order status tracking page
       clearCart();
       router.replace(`/order/${data.order.id}`);

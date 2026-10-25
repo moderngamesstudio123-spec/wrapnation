@@ -88,6 +88,38 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
     try {
       const res = await fetch(`/api/orders/${orderId}`);
       if (!res.ok) {
+        // Fallback to client cached order if serverless lambda has not synced
+        let cachedOrder: any = null;
+        try {
+          const raw = sessionStorage.getItem(`wrapnation_order_${orderId}`) || localStorage.getItem(`wrapnation_order_${orderId}`);
+          if (raw) {
+            cachedOrder = JSON.parse(raw);
+          }
+        } catch {}
+
+        if (cachedOrder) {
+          setOrder({
+            ...cachedOrder,
+            subtotalFormatted: cachedOrder.subtotalFormatted || `Rs ${Math.round(cachedOrder.subtotal / 100)}`,
+            taxFormatted: cachedOrder.taxFormatted || `Rs ${Math.round(cachedOrder.tax / 100)}`,
+            totalFormatted: cachedOrder.totalFormatted || `Rs ${Math.round(cachedOrder.total / 100)}`,
+            orderItems: (cachedOrder.orderItems || []).map((i: any) => ({
+              ...i,
+              unitPriceFormatted: i.unitPriceFormatted || `Rs ${Math.round(i.unitPrice / 100)}`,
+              subtotalFormatted: i.subtotalFormatted || `Rs ${Math.round(i.subtotal / 100)}`,
+              addOns: i.addOns || [],
+            })),
+          });
+          setShop({
+            name: 'Wrap Nation',
+            address: 'Shop 4, Food Street, Bengaluru',
+            phone: '+91 86868 78675',
+            gstin: null,
+          });
+          setError(null);
+          return;
+        }
+
         throw new Error('Order not found');
       }
       const data = await res.json();
@@ -99,6 +131,34 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
         setHintSubmitted(true);
       }
     } catch (err: unknown) {
+      // If error occurred, check client cache one more time before showing error
+      try {
+        const raw = sessionStorage.getItem(`wrapnation_order_${orderId}`) || localStorage.getItem(`wrapnation_order_${orderId}`);
+        if (raw) {
+          const cachedOrder = JSON.parse(raw);
+          setOrder({
+            ...cachedOrder,
+            subtotalFormatted: cachedOrder.subtotalFormatted || `Rs ${Math.round(cachedOrder.subtotal / 100)}`,
+            taxFormatted: cachedOrder.taxFormatted || `Rs ${Math.round(cachedOrder.tax / 100)}`,
+            totalFormatted: cachedOrder.totalFormatted || `Rs ${Math.round(cachedOrder.total / 100)}`,
+            orderItems: (cachedOrder.orderItems || []).map((i: any) => ({
+              ...i,
+              unitPriceFormatted: i.unitPriceFormatted || `Rs ${Math.round(i.unitPrice / 100)}`,
+              subtotalFormatted: i.subtotalFormatted || `Rs ${Math.round(i.subtotal / 100)}`,
+              addOns: i.addOns || [],
+            })),
+          });
+          setShop({
+            name: 'Wrap Nation',
+            address: 'Shop 4, Food Street, Bengaluru',
+            phone: '+91 86868 78675',
+            gstin: null,
+          });
+          setError(null);
+          return;
+        }
+      } catch {}
+
       const msg = err instanceof Error ? err.message : 'Failed to load order';
       setError(msg);
     } finally {

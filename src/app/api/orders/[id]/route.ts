@@ -29,6 +29,18 @@ export async function GET(
   }
 
   if (!order) {
+    const cookieVal = req.cookies.get(`wn_order_${id}`)?.value || req.cookies.get('wn_last_order')?.value;
+    if (cookieVal) {
+      try {
+        const parsed = JSON.parse(cookieVal);
+        if (parsed && (parsed.id === id || !id)) {
+          order = parsed;
+        }
+      } catch {}
+    }
+  }
+
+  if (!order) {
     return NextResponse.json({ error: 'Order not found' }, { status: 404 });
   }
 
