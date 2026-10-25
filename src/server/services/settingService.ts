@@ -22,10 +22,14 @@ export interface ShopSettings {
 }
 
 export async function getSettings(): Promise<ShopSettings> {
-  const records = await prisma.setting.findMany();
   const map: Record<string, string> = {};
-  for (const r of records) {
-    map[r.key] = r.value;
+  try {
+    const records = await prisma.setting.findMany();
+    for (const r of records) {
+      map[r.key] = r.value;
+    }
+  } catch (err) {
+    console.warn('Could not read settings from DB, using defaults:', err);
   }
 
   return {

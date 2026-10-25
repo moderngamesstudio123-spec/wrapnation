@@ -5,6 +5,8 @@ import { getSettings } from '@/server/services/settingService';
 import { signTableToken } from '@/lib/security/hmac';
 import HomeActionClient from './HomeActionClient';
 
+export const dynamic = 'force-dynamic';
+
 export default async function HomePage() {
   const settings = await getSettings();
 
