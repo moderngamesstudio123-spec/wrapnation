@@ -60,10 +60,11 @@ export async function GET(req: NextRequest) {
     const signedToken = signTableToken(i);
     const orderUrl = `${origin}/t/${signedToken}`;
     
-    // Generate high resolution QR code data URL
+    // Generate ultra-crisp QR code with standard 4-module quiet zone for instant Android camera detection
     const qrDataUrl = await QRCode.toDataURL(orderUrl, {
-      width: 400,
-      margin: 2,
+      width: 500,
+      margin: 4,
+      errorCorrectionLevel: 'M',
       color: { dark: '#000000', light: '#ffffff' },
     });
 
@@ -82,8 +83,9 @@ export async function GET(req: NextRequest) {
   // Also include takeaway QR
   const takeawayUrl = `${origin}/takeaway`;
   const takeawayQrDataUrl = await QRCode.toDataURL(takeawayUrl, {
-    width: 400,
-    margin: 2,
+    width: 500,
+    margin: 4,
+    errorCorrectionLevel: 'M',
     color: { dark: '#000000', light: '#ffffff' },
   });
 

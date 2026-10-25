@@ -242,8 +242,8 @@ export default function AdminTableQRsPage() {
                   <div className="w-12 h-1 bg-amber-400 mx-auto rounded-full"></div>
                 </div>
 
-                {/* QR Code */}
-                <div className="my-4 p-2 bg-amber-50/50 rounded-2xl border border-amber-200 shadow-inner">
+                {/* QR Code on Pure High-Contrast White Container for Instant Camera Detection */}
+                <div className="my-4 p-3 bg-white rounded-2xl border-2 border-neutral-200 shadow-xs">
                   {t.qrDataUrl && (
                     <Image
                       src={t.qrDataUrl}
