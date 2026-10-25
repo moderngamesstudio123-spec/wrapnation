@@ -62,11 +62,12 @@ describe('Payment Security & Fraud Defenses', () => {
     expect(updatedOrder?.status).toBe('PREPARING');
     expect(updatedOrder?.paymentStatus).toBe('PAID');
 
-    // Both Kitchen Slip and Customer Bill should now be queued
+    // Customer Bill should now be queued
     const printJobs = await prisma.printJob.findMany({
       where: { orderId: order.id },
     });
-    expect(printJobs.length).toBeGreaterThanOrEqual(2);
+    expect(printJobs.length).toBeGreaterThanOrEqual(1);
+    expect(printJobs[0].slipType).toBe('CUSTOMER_BILL');
   });
 
   it('rejects duplicate UTR transaction reference across two separate orders', async () => {

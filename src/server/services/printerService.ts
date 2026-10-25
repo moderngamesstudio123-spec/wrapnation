@@ -162,17 +162,7 @@ export async function queueOrderPrintJobs(orderId: string): Promise<void> {
     paperWidth,
   };
 
-  // Queue Kitchen Slip Job
-  const kitchenJob = await prisma.printJob.create({
-    data: {
-      orderId: order.id,
-      slipType: SlipType.KITCHEN,
-      status: PrintJobStatus.PENDING,
-      payloadJson: JSON.stringify(kitchenPayload),
-    },
-  });
-
-  // Queue Bill Job
+  // Queue Bill Job (Sirf Customer Bill print hoga as requested)
   const billJob = await prisma.printJob.create({
     data: {
       orderId: order.id,
@@ -186,7 +176,7 @@ export async function queueOrderPrintJobs(orderId: string): Promise<void> {
   sseBroker.broadcast('PRINTER_JOB_CREATED', {
     orderId: order.id,
     orderNumber: order.orderNumber,
-    jobs: [kitchenJob.id, billJob.id],
+    jobs: [billJob.id],
   });
 }
 
@@ -211,7 +201,7 @@ export async function triggerReprint(
   const paperWidth = settings.printerPaperWidth;
   let count = 0;
 
-  if (!slipType || slipType === 'KITCHEN') {
+  if (slipType === 'KITCHEN') {
     const kitchenItems: KitchenSlipItem[] = order.orderItems.map((item) => {
       let addOnNames: string[] = [];
       try {

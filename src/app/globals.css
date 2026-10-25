@@ -31,6 +31,11 @@
 
 /* 80mm & 58mm Thermal Receipt Print Rules */
 @media print {
+  @page {
+    margin: 0;
+    size: auto;
+  }
+
   body {
     background: white !important;
     color: black !important;

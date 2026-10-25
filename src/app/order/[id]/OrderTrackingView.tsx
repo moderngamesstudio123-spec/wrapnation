@@ -197,7 +197,7 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
   return (
     <div className="min-h-screen bg-[#FAF7F2] text-neutral-900 pb-20">
       {/* Top Header */}
-      <header className="bg-white border-b border-neutral-200/80 p-4 sticky top-0 z-30 shadow-xs">
+      <header className="bg-white border-b border-neutral-200/80 p-4 sticky top-0 z-30 shadow-xs no-print">
         <div className="max-w-xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Link
@@ -221,6 +221,8 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
       </header>
 
       <main className="max-w-xl mx-auto p-4 space-y-6">
+        {/* Interactive Screen Cards (Hidden during Print) */}
+        <div className="no-print space-y-6">
         {/* 1. Big Order Number Token Card */}
         <div className="p-6 rounded-3xl bg-white border border-neutral-200/80 text-center space-y-3 shadow-sm">
           <div className="inline-flex items-center gap-2 py-1 px-3 rounded-full bg-neutral-100 text-neutral-700 text-xs font-bold">
@@ -658,6 +660,7 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
               </a>
             </div>
           )}
+        </div>
         </div>
 
         {/* Printable Receipt for 80mm Browser Fallback */}

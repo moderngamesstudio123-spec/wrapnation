@@ -132,7 +132,7 @@ export function printMockCustomerBill(data: CustomerBillData): void {
     console.log(`Ref / UTR: ${data.utr}`);
   }
   console.log(subDivider);
-  console.log(`Thank you! Visit Wrap Nation again.`.padStart(Math.floor((width + 33) / 2)));
+  console.log(`*** THANK YOU, VISIT AGAIN ***`.padStart(Math.floor((width + 30) / 2)));
   console.log(divider);
   console.log(`[CUT PAPER]`.padStart(Math.floor((width + 11) / 2)));
   console.log(divider + '\n');
@@ -263,7 +263,7 @@ export async function printJob(payloadJson: string): Promise<boolean> {
       }
       printer.drawLine();
       printer.alignCenter();
-      printer.println('Thank you! Visit Wrap Nation again.');
+      printer.println('*** THANK YOU, VISIT AGAIN ***');
       printer.cut();
     }
 
