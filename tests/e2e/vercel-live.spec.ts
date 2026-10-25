@@ -61,7 +61,7 @@ test.describe('Live Vercel Production Verification', () => {
     await expect(receipt).toBeAttached({ timeout: 10000 });
     const receiptText = await receipt.textContent();
     expect(receiptText).toContain('Wrap Nation');
-    expect(receiptText).toContain('86868 78675');
+    expect(receiptText).toContain('81250 57086');
     expect(receiptText).toContain('THANK YOU');
 
     // Verify Print Bill button is present
