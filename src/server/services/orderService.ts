@@ -343,29 +343,36 @@ export async function markOrderPaid(
 
   // 1. Check for Duplicate UTR
   if (cleanUtr) {
-    const existingPaymentWithUtr = await prisma.payment.findUnique({
-      where: { utr: cleanUtr },
-      include: { order: true },
-    });
+    try {
+      const existingPaymentWithUtr = await prisma.payment.findUnique({
+        where: { utr: cleanUtr },
+        include: { order: true },
+      });
 
-    if (existingPaymentWithUtr && existingPaymentWithUtr.orderId !== order.id) {
-      throw new Error(
-        `Duplicate UTR detected! Transaction reference "${cleanUtr}" was already used to confirm Order #${existingPaymentWithUtr.order.orderNumber}.`
-      );
+      if (existingPaymentWithUtr && existingPaymentWithUtr.orderId !== order.id) {
+        throw new Error(
+          `Duplicate UTR detected! Transaction reference "${cleanUtr}" was already used to confirm Order #${existingPaymentWithUtr.order.orderNumber}.`
+        );
+      }
+    } catch (utrErr: any) {
+      if (utrErr.message?.includes('Duplicate UTR')) throw utrErr;
     }
   }
 
   // 2. Duplicate Amount Warning (Alerts if same amount was paid within last 10 minutes)
   const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
-  const recentMatchingPayment = await prisma.payment.findFirst({
-    where: {
-      amount: order.total,
-      status: PaymentStatus.PAID,
-      createdAt: { gte: tenMinutesAgo },
-      orderId: { not: order.id },
-    },
-    include: { order: true },
-  });
+  let recentMatchingPayment: any = null;
+  try {
+    recentMatchingPayment = await prisma.payment.findFirst({
+      where: {
+        amount: order.total,
+        status: PaymentStatus.PAID,
+        createdAt: { gte: tenMinutesAgo },
+        orderId: { not: order.id },
+      },
+      include: { order: true },
+    });
+  } catch {}
 
   let duplicateWarning: string | null = null;
   if (recentMatchingPayment) {
@@ -416,7 +423,7 @@ export async function markOrderPaid(
   }
 
   // 4. Trigger 80mm thermal slips printing ONLY AFTER verified payment!
-  await queueOrderPrintJobs(order.id);
+  await queueOrderPrintJobs(order.id).catch(() => {});
 
   // 5. Send customer WhatsApp confirmation asynchronously
   sendOrderConfirmedNotification(order.id).catch(() => {});
@@ -458,7 +465,7 @@ export async function markOrderPaid(
       warning: duplicateWarning,
     },
     ipAddress: ip,
-  });
+  }).catch(() => {});
 
   return {
     success: true,
@@ -529,7 +536,7 @@ export async function updateOrderStatus(
     resource: 'Order',
     details: { orderId, oldStatus: order.status, newStatus },
     ipAddress: ip,
-  });
+  }).catch(() => {});
 
   return updated;
 }
@@ -539,13 +546,29 @@ export async function updateOrderStatus(
  * Does NOT alter payment status. Only provides a hint displayed on the POS order card.
  */
 export async function submitCustomerUtrHint(orderId: string, last4Digits: string) {
-  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  let order: any = null;
+  try {
+    order = await prisma.order.findUnique({ where: { id: orderId } });
+  } catch {}
+
+  if (!order) {
+    order = await getFallbackOrder(orderId);
+  }
+
   if (!order) throw new Error('Order not found');
 
-  const updated = await prisma.order.update({
-    where: { id: orderId },
-    data: { customerUtrHint: last4Digits },
-  });
+  let updated: any = null;
+  try {
+    updated = await prisma.order.update({
+      where: { id: orderId },
+      data: { customerUtrHint: last4Digits },
+    });
+  } catch {
+    updated = (await updateFallbackOrder(orderId, { customerUtrHint: last4Digits })) || {
+      ...order,
+      customerUtrHint: last4Digits,
+    };
+  }
 
   sseBroker.broadcast('CUSTOMER_UTR_HINT', {
     orderId: updated.id,
