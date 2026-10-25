@@ -1,0 +1,20 @@
+{
+  "name": "wrap-nation-print-agent",
+  "version": "1.0.0",
+  "description": "Outbound ESC/POS print agent for Wrap Nation 80mm/58mm thermal printers",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "tsx src/index.ts",
+    "test-print": "tsx src/test-print.ts"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "node-thermal-printer": "^4.6.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.43",
+    "tsx": "^4.23.15",
+    "typescript": "^5.0.0"
+  }
+}

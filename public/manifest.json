@@ -1,0 +1,16 @@
+{
+  "name": "Wrap Nation POS & QR Ordering",
+  "short_name": "Wrap Nation",
+  "description": "Production QR-based ordering and live billing system for Wrap Nation",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#FFCC00",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

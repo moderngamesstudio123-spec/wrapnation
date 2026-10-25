@@ -1,0 +1,292 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OWNER
+  STAFF
+}
+
+enum OrderType {
+  DINE_IN
+  TAKEAWAY
+}
+
+enum OrderStatus {
+  AWAITING_PAYMENT
+  PAID
+  PREPARING
+  READY
+  COMPLETED
+  CANCELLED
+  EXPIRED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  UPI
+  CASH
+}
+
+enum SlipType {
+  KITCHEN
+  CUSTOMER_BILL
+}
+
+enum PrintJobStatus {
+  PENDING
+  PRINTED
+  FAILED
+}
+
+enum MessageStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+model User {
+  id                  String     @id @default(uuid())
+  email               String     @unique
+  name                String
+  passwordHash        String
+  role                Role       @default(STAFF)
+  mustChangePassword  Boolean    @default(true)
+  failedLoginAttempts Int        @default(0)
+  lockoutUntil        DateTime?
+  totpSecret          String?
+  totpEnabled         Boolean    @default(false)
+  sessions            Session[]
+  auditLogs           AuditLog[]
+  paymentsConfirmed   Payment[]  @relation("ConfirmedByStaff")
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([tokenHash])
+}
+
+model Category {
+  id        String     @id @default(uuid())
+  name      String     @unique
+  slug      String     @unique
+  sortOrder Int        @default(0)
+  isActive  Boolean    @default(true)
+  items     MenuItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model MenuItem {
+  id          String          @id @default(uuid())
+  categoryId  String
+  category    Category        @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  name        String
+  description String?
+  basePrice   Int             // in paise (e.g. 13000 = Rs 130.00)
+  isVeg       Boolean         @default(false)
+  isAvailable Boolean         @default(true)
+  imageUrl    String?
+  sortOrder   Int             @default(0)
+  variants    ItemVariant[]
+  addOnLinks  MenuItemAddOn[]
+  orderItems  OrderItem[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([categoryId])
+  @@index([isAvailable])
+}
+
+model ItemVariant {
+  id          String      @id @default(uuid())
+  menuItemId  String
+  menuItem    MenuItem    @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  name        String      // e.g. "Combo (Fries + Cold Drink)"
+  priceDelta  Int         // in paise (e.g. 6000 = +Rs 60.00)
+  isDefault   Boolean     @default(false)
+  isAvailable Boolean     @default(true)
+  orderItems  OrderItem[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([menuItemId])
+}
+
+model AddOn {
+  id            String          @id @default(uuid())
+  name          String          @unique
+  price         Int             // in paise (e.g. 1000 = Rs 10.00)
+  isAvailable   Boolean         @default(true)
+  isCustomPrice Boolean         @default(false)
+  menuItemLinks MenuItemAddOn[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model MenuItemAddOn {
+  id         String   @id @default(uuid())
+  menuItemId String
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  addOnId    String
+  addOn      AddOn    @relation(fields: [addOnId], references: [id], onDelete: Cascade)
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@unique([menuItemId, addOnId])
+}
+
+model Order {
+  id              String        @id @default(uuid()) // 128-bit unguessable UUID
+  orderNumber     Int           // Sequential order number per day (#101...)
+  takeawayToken   String?       // Sequential takeaway token per day (T-1...)
+  type            OrderType     @default(DINE_IN)
+  tableNumber     Int?
+  status          OrderStatus   @default(AWAITING_PAYMENT)
+  paymentStatus   PaymentStatus @default(PENDING)
+  paymentMethod   PaymentMethod @default(UPI)
+  customerName    String?
+  customerPhone   String?
+  customerUtrHint String?       // Last 4 digits entered by customer
+  whatsappOptIn   Boolean       @default(false)
+  cookingNote     String?       // Max 200 chars
+  subtotal        Int           // paise
+  tax             Int           // paise
+  total           Int           // paise
+  expiresAt       DateTime?     // Unpaid orders auto-expire after 15 minutes
+  completedAt     DateTime?
+  orderItems      OrderItem[]
+  payments        Payment[]
+  printJobs       PrintJob[]
+  messages        MessageLog[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([customerPhone])
+  @@index([orderNumber])
+}
+
+model OrderItem {
+  id          String       @id @default(uuid())
+  orderId     String
+  order       Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItemId  String?
+  menuItem    MenuItem?    @relation(fields: [menuItemId], references: [id], onDelete: SetNull)
+  variantId   String?
+  variant     ItemVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  itemName    String       // Snapshot
+  variantName String?      // Snapshot
+  unitPrice   Int          // Snapshot in paise
+  quantity    Int
+  addOnsJson  String       // Snapshot JSON array
+  subtotal    Int          // Snapshot in paise
+  notes       String?
+  createdAt   DateTime     @default(now())
+
+  @@index([orderId])
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  orderId       String
+  order         Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  amount        Int           // in paise
+  method        PaymentMethod
+  status        PaymentStatus
+  utr           String?       @unique // Prevents duplicate UTR reuse
+  confirmedById String?
+  confirmedBy   User?         @relation("ConfirmedByStaff", fields: [confirmedById], references: [id])
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([orderId])
+  @@index([utr])
+  @@index([createdAt])
+}
+
+model PrintJob {
+  id          String         @id @default(uuid())
+  orderId     String
+  order       Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  slipType    SlipType
+  status      PrintJobStatus @default(PENDING)
+  payloadJson String         // Rendered receipt JSON
+  attempts    Int            @default(0)
+  lastError   String?
+  createdAt   DateTime       @default(now())
+  printedAt   DateTime?
+
+  @@index([status])
+  @@index([orderId])
+}
+
+model MessageLog {
+  id             String        @id @default(uuid())
+  orderId        String
+  order          Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  recipientPhone String
+  templateName   String
+  payload        String
+  status         MessageStatus @default(PENDING)
+  attempts       Int           @default(0)
+  error          String?
+  createdAt      DateTime      @default(now())
+  sentAt         DateTime?
+
+  @@index([status])
+  @@index([orderId])
+}
+
+model TableQR {
+  id            String   @id @default(uuid())
+  tableNumber   Int      @unique
+  signedToken   String   @unique
+  qrCodeDataUrl String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Setting {
+  key         String   @id
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  resource  String
+  details   String?  // JSON
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([action])
+  @@index([createdAt])
+  @@index([userId])
+}

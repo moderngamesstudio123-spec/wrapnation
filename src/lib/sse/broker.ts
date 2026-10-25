@@ -1,0 +1,60 @@
+type SSEListener = (data: string) => void;
+
+class SSEBroker {
+  private adminListeners: Set<SSEListener> = new Set();
+  private orderListeners: Map<string, Set<SSEListener>> = new Map();
+
+  subscribeAdmin(listener: SSEListener): () => void {
+    this.adminListeners.add(listener);
+    return () => {
+      this.adminListeners.delete(listener);
+    };
+  }
+
+  subscribeOrder(orderId: string, listener: SSEListener): () => void {
+    if (!this.orderListeners.has(orderId)) {
+      this.orderListeners.set(orderId, new Set());
+    }
+    const set = this.orderListeners.get(orderId)!;
+    set.add(listener);
+
+    return () => {
+      set.delete(listener);
+      if (set.size === 0) {
+        this.orderListeners.delete(orderId);
+      }
+    };
+  }
+
+  broadcast(event: string, payload: unknown, targetOrderId?: string): void {
+    const formatted = `event: ${event}\ndata: ${JSON.stringify(payload)}\n\n`;
+
+    // 1. Notify all admin POS listeners
+    for (const listener of this.adminListeners) {
+      try {
+        listener(formatted);
+      } catch (e) {
+        console.error('SSE admin listener dispatch failed:', e);
+      }
+    }
+
+    // 2. If targetOrderId is provided, notify specific customer tracking listeners
+    if (targetOrderId && this.orderListeners.has(targetOrderId)) {
+      const set = this.orderListeners.get(targetOrderId)!;
+      for (const listener of set) {
+        try {
+          listener(formatted);
+        } catch (e) {
+          console.error('SSE order listener dispatch failed:', e);
+        }
+      }
+    }
+  }
+
+  getAdminSubscriberCount(): number {
+    return this.adminListeners.size;
+  }
+}
+
+export const sseBroker = new SSEBroker();
+export default sseBroker;

@@ -1,0 +1,42 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: wrapnation_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: wrapnation
+      POSTGRES_PASSWORD: wrapnation_secure_pass
+      POSTGRES_DB: wrapnation_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata_wrapnation:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wrapnation -d wrapnation_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wrapnation_app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: "postgresql://wrapnation:wrapnation_secure_pass@postgres:5432/wrapnation_db?schema=public"
+      SESSION_SECRET: "wrap_nation_session_secret_change_in_production_min_32_chars!"
+      HMAC_SECRET: "wrap_nation_table_hmac_secret_key_must_be_random_and_secure!"
+      PRINTER_AGENT_RAW_KEY: "wn_print_agent_secret_key_prod_80mm"
+      NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+      NODE_ENV: "production"
+      PORT: "3000"
+
+volumes:
+  pgdata_wrapnation:
+    name: wrapnation_pgdata
