@@ -266,7 +266,7 @@ export async function createOrder(params: CreateOrderParams, ip?: string) {
       })),
       payments: [],
     };
-    saveFallbackOrder(order);
+    await saveFallbackOrder(order);
   }
 
   // 7. Broadcast new order to Admin POS via SSE (triggers audio sound in POS)
@@ -324,7 +324,7 @@ export async function markOrderPaid(
   } catch {}
 
   if (!order) {
-    order = getFallbackOrder(orderId);
+    order = await getFallbackOrder(orderId);
   }
 
   if (!order) {
@@ -401,7 +401,7 @@ export async function markOrderPaid(
     });
   } catch (txErr) {
     console.warn('Database error in markOrderPaid, updating fallback store:', txErr);
-    updateFallbackOrder(order.id, {
+    await updateFallbackOrder(order.id, {
       status: 'PREPARING',
       paymentStatus: 'PAID',
       paymentMethod: params.method === 'CASH' ? 'CASH' : 'UPI',
@@ -482,7 +482,7 @@ export async function updateOrderStatus(
   } catch {}
 
   if (!order) {
-    order = getFallbackOrder(orderId);
+    order = await getFallbackOrder(orderId);
   }
 
   if (!order) {
@@ -500,10 +500,10 @@ export async function updateOrderStatus(
     });
   } catch (err) {
     console.warn('Database error in updateOrderStatus, updating fallback store:', err);
-    updated = updateFallbackOrder(orderId, {
+    updated = (await updateFallbackOrder(orderId, {
       status: newStatus,
       completedAt: newStatus === OrderStatus.COMPLETED ? new Date() : null,
-    }) || { ...order, status: newStatus };
+    })) || { ...order, status: newStatus };
   }
 
   // If order transitioned to READY, send WhatsApp notification
@@ -615,7 +615,7 @@ export async function getActiveOrderForTable(
     }
   } catch {}
 
-  const fallback = getTableOccupancy(tableNumber);
+  const fallback = await getTableOccupancy(tableNumber);
   if (fallback) {
     return {
       id: fallback.orderId,
@@ -654,7 +654,7 @@ export async function vacateTable(tableNumber: number, staffUser?: User): Promis
     }
   } catch {}
 
-  vacateTableStore(tableNumber);
+  await vacateTableStore(tableNumber);
 
   if (staffUser) {
     logAudit({

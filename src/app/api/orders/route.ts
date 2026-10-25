@@ -143,7 +143,7 @@ export async function GET(req: NextRequest) {
   }
 
   // Merge with resilient fallback orders store so staff dashboard ALWAYS sees live orders
-  const fallbackOrders = getAllFallbackOrders();
+  const fallbackOrders = await getAllFallbackOrders();
   const map = new Map<string, any>();
   for (const o of fallbackOrders) {
     map.set(o.id, o);

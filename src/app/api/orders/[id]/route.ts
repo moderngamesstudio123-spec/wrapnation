@@ -25,7 +25,7 @@ export async function GET(
   }
 
   if (!order) {
-    order = getFallbackOrder(id);
+    order = await getFallbackOrder(id);
   }
 
   if (!order) {
