@@ -203,11 +203,11 @@ export default function AdminLiveOrdersPage() {
       {/* 1. Header & Quick Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
+          <h1 className="text-2xl font-black text-neutral-950 tracking-tight flex items-center gap-2">
             <span>Live Kitchen & Orders Board</span>
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
           </h1>
-          <p className="text-xs text-neutral-400">
+          <p className="text-xs text-neutral-600 font-medium">
             Real-time SSE order stream • Auto-printing on 80mm thermal printer
           </p>
         </div>
@@ -216,21 +216,21 @@ export default function AdminLiveOrdersPage() {
           {/* Audio Chime Toggle */}
           <button
             onClick={() => setSoundEnabled(!soundEnabled)}
-            className={`p-2 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
+            className={`p-2.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition shadow-xs cursor-pointer ${
               soundEnabled
-                ? 'bg-neutral-900 border-neutral-700 text-amber-400'
-                : 'bg-neutral-900 border-neutral-800 text-neutral-500'
+                ? 'bg-amber-100 border-amber-300 text-amber-900'
+                : 'bg-white border-neutral-200 text-neutral-500 hover:bg-neutral-50'
             }`}
             title={soundEnabled ? 'Sound alert enabled' : 'Sound alert muted'}
           >
-            {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+            {soundEnabled ? <Volume2 className="w-4 h-4 text-amber-700" /> : <VolumeX className="w-4 h-4" />}
             <span className="hidden sm:inline">{soundEnabled ? 'Chime On' : 'Chime Off'}</span>
           </button>
 
           {/* Refresh Button */}
           <button
             onClick={fetchOrders}
-            className="p-2 rounded-xl bg-neutral-900 border border-neutral-800 hover:bg-neutral-800 text-neutral-300 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+            className="p-2.5 rounded-xl bg-white border border-neutral-200 hover:bg-amber-50/70 text-neutral-800 text-xs font-bold flex items-center gap-1.5 transition shadow-xs cursor-pointer"
           >
             <RefreshCw className="w-4 h-4" />
             <span className="hidden sm:inline">Refresh</span>
@@ -239,79 +239,79 @@ export default function AdminLiveOrdersPage() {
       </div>
 
       {/* 2. Metric Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
         <div
           onClick={() => setFilter('ACTIVE')}
-          className={`p-4 rounded-2xl border cursor-pointer transition ${
+          className={`p-4 rounded-2xl border cursor-pointer transition shadow-xs ${
             filter === 'ACTIVE'
-              ? 'bg-neutral-900 border-amber-400/60 shadow-lg'
-              : 'bg-neutral-900/60 border-neutral-800 hover:border-neutral-700'
+              ? 'bg-white border-amber-400 ring-2 ring-amber-400/30 shadow-md'
+              : 'bg-white/90 border-neutral-200/90 hover:border-amber-300'
           }`}
         >
-          <span className="text-xs text-neutral-400 font-bold uppercase tracking-wider block">
+          <span className="text-xs text-neutral-600 font-bold uppercase tracking-wider block">
             Active Orders
           </span>
-          <span className="text-2xl sm:text-3xl font-black text-white mt-1 block">
+          <span className="text-2xl sm:text-3xl font-black text-neutral-950 mt-1 block">
             {activeOrders.length}
           </span>
         </div>
 
         <div
           onClick={() => setFilter('AWAITING_PAYMENT')}
-          className={`p-4 rounded-2xl border cursor-pointer transition ${
+          className={`p-4 rounded-2xl border cursor-pointer transition shadow-xs ${
             filter === 'AWAITING_PAYMENT'
-              ? 'bg-neutral-900 border-amber-400 shadow-lg'
-              : 'bg-neutral-900/60 border-neutral-800 hover:border-neutral-700'
+              ? 'bg-amber-50 border-amber-400 ring-2 ring-amber-400/40 shadow-md'
+              : 'bg-white/90 border-neutral-200/90 hover:border-amber-300'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs text-amber-400 font-bold uppercase tracking-wider block">
+            <span className="text-xs text-amber-800 font-bold uppercase tracking-wider block">
               Awaiting Payment
             </span>
             {awaitingPaymentCount > 0 && (
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping"></span>
             )}
           </div>
-          <span className="text-2xl sm:text-3xl font-black text-amber-400 mt-1 block">
+          <span className="text-2xl sm:text-3xl font-black text-amber-600 mt-1 block">
             {awaitingPaymentCount}
           </span>
         </div>
 
         <div
           onClick={() => setFilter('PREPARING')}
-          className={`p-4 rounded-2xl border cursor-pointer transition ${
+          className={`p-4 rounded-2xl border cursor-pointer transition shadow-xs ${
             filter === 'PREPARING'
-              ? 'bg-neutral-900 border-blue-400 shadow-lg'
-              : 'bg-neutral-900/60 border-neutral-800 hover:border-neutral-700'
+              ? 'bg-blue-50 border-blue-400 ring-2 ring-blue-400/30 shadow-md'
+              : 'bg-white/90 border-neutral-200/90 hover:border-blue-300'
           }`}
         >
-          <span className="text-xs text-blue-400 font-bold uppercase tracking-wider block">
+          <span className="text-xs text-blue-800 font-bold uppercase tracking-wider block">
             Kitchen (Cooking)
           </span>
-          <span className="text-2xl sm:text-3xl font-black text-blue-400 mt-1 block">
+          <span className="text-2xl sm:text-3xl font-black text-blue-600 mt-1 block">
             {preparingCount}
           </span>
         </div>
 
         <div
           onClick={() => setFilter('READY')}
-          className={`p-4 rounded-2xl border cursor-pointer transition ${
+          className={`p-4 rounded-2xl border cursor-pointer transition shadow-xs ${
             filter === 'READY'
-              ? 'bg-neutral-900 border-emerald-400 shadow-lg'
-              : 'bg-neutral-900/60 border-neutral-800 hover:border-neutral-700'
+              ? 'bg-emerald-50 border-emerald-400 ring-2 ring-emerald-400/30 shadow-md'
+              : 'bg-white/90 border-neutral-200/90 hover:border-emerald-300'
           }`}
         >
-          <span className="text-xs text-emerald-400 font-bold uppercase tracking-wider block">
+          <span className="text-xs text-emerald-800 font-bold uppercase tracking-wider block">
             Ready for Pickup
           </span>
-          <span className="text-2xl sm:text-3xl font-black text-emerald-400 mt-1 block">
+          <span className="text-2xl sm:text-3xl font-black text-emerald-600 mt-1 block">
             {readyCount}
           </span>
         </div>
       </div>
 
       {/* 3. Filter Navigation Tabs */}
-      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 border-b border-neutral-850">
+      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 border-b border-neutral-200">
         {[
           { key: 'ACTIVE', label: `Active (${activeOrders.length})` },
           { key: 'AWAITING_PAYMENT', label: `Awaiting Payment (${awaitingPaymentCount})` },
@@ -323,10 +323,10 @@ export default function AdminLiveOrdersPage() {
           <button
             key={tab.key}
             onClick={() => setFilter(tab.key)}
-            className={`py-2 px-4 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${
+            className={`py-2 px-4 rounded-xl text-xs font-bold whitespace-nowrap transition shadow-xs cursor-pointer ${
               filter === tab.key
-                ? 'bg-amber-400 text-neutral-950 shadow-md'
-                : 'text-neutral-400 hover:text-white hover:bg-neutral-900'
+                ? 'bg-amber-400 text-neutral-950 font-black shadow-sm border border-amber-500/40'
+                : 'bg-white text-neutral-700 hover:text-neutral-950 hover:bg-amber-50 border border-neutral-200/80'
             }`}
           >
             {tab.label}
@@ -336,9 +336,9 @@ export default function AdminLiveOrdersPage() {
 
       {/* 4. Order Cards Grid */}
       {filteredOrders.length === 0 ? (
-        <div className="text-center py-20 bg-neutral-900/40 rounded-3xl border border-neutral-850 space-y-3">
-          <ChefHat className="w-10 h-10 text-neutral-600 mx-auto" />
-          <p className="text-sm text-neutral-400">No orders in this status.</p>
+        <div className="text-center py-20 bg-white rounded-3xl border border-neutral-200/90 shadow-sm space-y-3">
+          <ChefHat className="w-10 h-10 text-neutral-400 mx-auto" />
+          <p className="text-sm text-neutral-600 font-semibold">No orders in this status.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -350,33 +350,33 @@ export default function AdminLiveOrdersPage() {
             return (
               <div
                 key={order.id}
-                className={`rounded-3xl border p-5 flex flex-col justify-between gap-4 transition shadow-xl ${
+                className={`rounded-3xl border p-5 flex flex-col justify-between gap-4 transition shadow-sm hover:shadow-md bg-white ${
                   isUnpaid
                     ? ageMins >= 10
-                      ? 'bg-neutral-900 border-rose-600/70'
-                      : 'bg-neutral-900 border-amber-400/50'
+                      ? 'border-rose-400 ring-1 ring-rose-300'
+                      : 'border-amber-400'
                     : order.status === 'READY'
-                    ? 'bg-neutral-900 border-emerald-500/60'
-                    : 'bg-neutral-900 border-neutral-800'
+                    ? 'border-emerald-400 ring-1 ring-emerald-300'
+                    : 'border-neutral-200/90'
                 }`}
               >
                 {/* Header: Token, Type & Age */}
                 <div className="space-y-2">
                   <div className="flex items-start justify-between">
                     <div>
-                      <div className="text-3xl font-black text-amber-400 tracking-tight">
+                      <div className="text-3xl font-black text-neutral-950 tracking-tight">
                         {orderTokenLabel}
                       </div>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-xs font-bold text-white flex items-center gap-1">
+                        <span className="text-xs font-bold text-neutral-800 flex items-center gap-1">
                           {order.type === 'DINE_IN' ? (
                             <>
-                              <Utensils className="w-3.5 h-3.5 text-amber-400" />
+                              <Utensils className="w-3.5 h-3.5 text-amber-600" />
                               <span>Table {order.tableNumber}</span>
                             </>
                           ) : (
                             <>
-                              <ShoppingBag className="w-3.5 h-3.5 text-amber-400" />
+                              <ShoppingBag className="w-3.5 h-3.5 text-amber-600" />
                               <span>Takeaway ({order.customerName || 'Counter'})</span>
                             </>
                           )}
@@ -389,18 +389,18 @@ export default function AdminLiveOrdersPage() {
                         className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold ${
                           isUnpaid
                             ? ageMins >= 10
-                              ? 'bg-rose-950 text-rose-400 border border-rose-800 animate-pulse'
-                              : 'bg-amber-400/10 text-amber-400 border border-amber-400/30'
+                              ? 'bg-rose-100 text-rose-800 border border-rose-300 animate-pulse'
+                              : 'bg-amber-100 text-amber-800 border border-amber-300'
                             : order.status === 'READY'
-                            ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
-                            : 'bg-neutral-800 text-neutral-300'
+                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                            : 'bg-neutral-100 text-neutral-700 border border-neutral-200'
                         }`}
                       >
                         <Clock className="w-3 h-3" />
                         <span>{ageMins}m ago</span>
                       </span>
 
-                      <div className="text-xs font-black text-white">
+                      <div className="text-sm font-black text-neutral-950">
                         {formatPaise(order.total)}
                       </div>
                     </div>
@@ -408,9 +408,9 @@ export default function AdminLiveOrdersPage() {
 
                   {/* Customer hint highlight if customer entered last 4 digits */}
                   {order.customerUtrHint && (
-                    <div className="p-2 rounded-xl bg-amber-400/10 border border-amber-400/30 text-amber-400 text-xs flex items-center justify-between">
-                      <span className="font-semibold">Customer reported UTR digits:</span>
-                      <span className="font-mono font-black text-sm bg-neutral-950 px-2 py-0.5 rounded">
+                    <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs flex items-center justify-between">
+                      <span className="font-bold">Customer UTR Hint:</span>
+                      <span className="font-mono font-black text-sm bg-white px-2 py-0.5 rounded border border-amber-300 text-neutral-950">
                         {order.customerUtrHint}
                       </span>
                     </div>
@@ -418,15 +418,15 @@ export default function AdminLiveOrdersPage() {
 
                   {/* Cooking Note if any */}
                   {order.cookingNote && (
-                    <div className="p-2 rounded-xl bg-neutral-950 border border-neutral-800 text-amber-300/90 text-xs flex items-start gap-1.5">
-                      <FileText className="w-3.5 h-3.5 shrink-0 mt-0.5 text-amber-400" />
+                    <div className="p-2.5 rounded-xl bg-amber-50/60 border border-amber-200 text-amber-900 text-xs flex items-start gap-1.5">
+                      <FileText className="w-3.5 h-3.5 shrink-0 mt-0.5 text-amber-600" />
                       <span>Note: {order.cookingNote}</span>
                     </div>
                   )}
                 </div>
 
                 {/* Items List */}
-                <div className="py-2 border-t border-b border-neutral-800/80 space-y-2 text-xs flex-1">
+                <div className="py-2.5 border-t border-b border-neutral-200/90 space-y-2 text-xs flex-1">
                   {order.orderItems.map((item) => {
                     let addOns: Array<{ name: string }> = [];
                     try {
@@ -436,21 +436,21 @@ export default function AdminLiveOrdersPage() {
                     return (
                       <div key={item.id} className="flex justify-between items-start gap-2">
                         <div className="space-y-0.5">
-                          <span className="font-bold text-white">
+                          <span className="font-bold text-neutral-900">
                             {item.quantity}× {item.itemName}
                           </span>
                           {item.variantName && (
-                            <div className="text-[11px] text-amber-400/90 pl-3">
+                            <div className="text-[11px] text-amber-700 pl-3 font-semibold">
                               • {item.variantName}
                             </div>
                           )}
                           {addOns.length > 0 && (
-                            <div className="text-[11px] text-neutral-400 pl-3">
+                            <div className="text-[11px] text-neutral-600 pl-3">
                               + {addOns.map((a) => a.name).join(', ')}
                             </div>
                           )}
                         </div>
-                        <span className="text-neutral-400 font-mono">
+                        <span className="text-neutral-700 font-mono font-bold">
                           {formatPaise(item.subtotal)}
                         </span>
                       </div>
@@ -463,15 +463,15 @@ export default function AdminLiveOrdersPage() {
                   {isUnpaid ? (
                     <button
                       onClick={() => setSelectedOrderForPayment(order)}
-                      className="w-full py-3 px-4 rounded-xl bg-amber-400 hover:bg-amber-300 active:bg-amber-500 text-neutral-950 font-black text-xs uppercase tracking-wider shadow-lg transition flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="w-full py-3 px-4 rounded-xl bg-amber-400 hover:bg-amber-300 active:bg-amber-500 text-neutral-950 font-black text-xs uppercase tracking-wider shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <DollarSign className="w-4 h-4 stroke-[3]" />
-                      <span>Mark Paid (UPI/Cash)</span>
+                      <span>Mark Paid (UPI / Cash)</span>
                     </button>
                   ) : order.status === 'PAID' || order.status === 'PREPARING' ? (
                     <button
                       onClick={() => handleUpdateStatus(order.id, 'READY')}
-                      className="w-full py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600 text-neutral-950 font-black text-xs uppercase tracking-wider shadow-lg transition flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="w-full py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600 text-neutral-950 font-black text-xs uppercase tracking-wider shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <Bell className="w-4 h-4 stroke-[3]" />
                       <span>Mark Ready for Pickup</span>
@@ -479,26 +479,26 @@ export default function AdminLiveOrdersPage() {
                   ) : order.status === 'READY' ? (
                     <button
                       onClick={() => handleUpdateStatus(order.id, 'COMPLETED')}
-                      className="w-full py-3 px-4 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-xs uppercase tracking-wider transition flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="w-full py-3 px-4 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-amber-400 font-black text-xs uppercase tracking-wider shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
                     >
-                      <CheckCheck className="w-4 h-4 text-emerald-400" />
-                      <span>Complete Order</span>
+                      <CheckCheck className="w-4 h-4" />
+                      <span>Complete & Deliver</span>
                     </button>
                   ) : null}
 
                   {/* Secondary Actions: Reprint Slip */}
-                  <div className="flex items-center justify-between text-[11px] text-neutral-400 pt-1">
-                    <span className="uppercase font-semibold">
+                  <div className="flex items-center justify-between text-[11px] text-neutral-600 pt-1">
+                    <span className="uppercase font-bold text-neutral-700">
                       {order.paymentMethod} • {order.paymentStatus}
                     </span>
 
                     <button
                       onClick={() => handleReprint(order.id)}
                       disabled={reprintingOrderId === order.id}
-                      className="hover:text-amber-400 flex items-center gap-1 p-1 transition cursor-pointer"
+                      className="hover:text-amber-700 font-bold flex items-center gap-1 p-1 transition cursor-pointer text-neutral-700"
                     >
                       <Printer className="w-3.5 h-3.5" />
-                      <span>{reprintingOrderId === order.id ? 'Queued...' : 'Reprint Slip'}</span>
+                      <span>{reprintingOrderId === order.id ? 'Queued...' : 'Reprint Bill'}</span>
                     </button>
                   </div>
                 </div>

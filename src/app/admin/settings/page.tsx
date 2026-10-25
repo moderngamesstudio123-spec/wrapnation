@@ -142,25 +142,25 @@ export default function AdminSettingsPage() {
   return (
     <div className="space-y-8 max-w-4xl">
       <div>
-        <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
+        <h1 className="text-2xl font-black text-neutral-950 tracking-tight flex items-center gap-2">
           <span>Shop & System Settings</span>
-          <SettingsIcon className="w-6 h-6 text-amber-400" />
+          <SettingsIcon className="w-6 h-6 text-amber-500" />
         </h1>
-        <p className="text-xs text-neutral-400">
+        <p className="text-xs text-neutral-600 font-medium">
           Configure store identity, operating hours, GST, and secure payment credentials
         </p>
       </div>
 
       {/* 1. General Settings Form */}
-      <form onSubmit={handleSaveGeneral} className="p-6 rounded-3xl bg-neutral-900 border border-neutral-800 space-y-6 shadow-xl">
-        <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+      <form onSubmit={handleSaveGeneral} className="p-6 rounded-3xl bg-white border border-neutral-200/90 space-y-6 shadow-sm">
+        <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
           <div className="flex items-center gap-2">
-            <Store className="w-5 h-5 text-amber-400" />
-            <h2 className="font-black text-base text-white">General Shop Profile</h2>
+            <Store className="w-5 h-5 text-amber-600" />
+            <h2 className="font-black text-base text-neutral-950">General Shop Profile</h2>
           </div>
           {generalMessage && (
-            <span className="text-xs font-semibold text-emerald-400 flex items-center gap-1">
-              <CheckCircle2 className="w-3.5 h-3.5" />
+            <span className="text-xs font-semibold text-emerald-700 flex items-center gap-1 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
               {generalMessage}
             </span>
           )}
@@ -168,66 +168,66 @@ export default function AdminSettingsPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
           <div className="space-y-1">
-            <label className="text-neutral-400 font-bold block">Shop Name</label>
+            <label className="text-neutral-700 font-bold block">Shop Name</label>
             <input
               type="text"
               required
               value={settings.shopName}
               onChange={(e) => setSettings({ ...settings, shopName: e.target.value })}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-white font-medium focus:outline-none focus:border-amber-400"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 border border-neutral-300 text-neutral-900 font-medium focus:outline-none focus:border-amber-400 shadow-xs"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="text-neutral-400 font-bold block">Contact Phone Number</label>
+            <label className="text-neutral-700 font-bold block">Contact Phone Number</label>
             <input
               type="text"
               required
               value={settings.shopPhone}
               onChange={(e) => setSettings({ ...settings, shopPhone: e.target.value })}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-white font-medium focus:outline-none focus:border-amber-400"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 border border-neutral-300 text-neutral-900 font-medium focus:outline-none focus:border-amber-400 shadow-xs"
             />
           </div>
 
           <div className="sm:col-span-2 space-y-1">
-            <label className="text-neutral-400 font-bold block">Shop Address</label>
+            <label className="text-neutral-700 font-bold block">Shop Address</label>
             <input
               type="text"
               required
               value={settings.shopAddress}
               onChange={(e) => setSettings({ ...settings, shopAddress: e.target.value })}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-white font-medium focus:outline-none focus:border-amber-400"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 border border-neutral-300 text-neutral-900 font-medium focus:outline-none focus:border-amber-400 shadow-xs"
             />
           </div>
 
           {/* Operating Hours */}
           <div className="space-y-1">
-            <label className="text-neutral-400 font-bold block">Opening Time (24h)</label>
+            <label className="text-neutral-700 font-bold block">Opening Time (24h)</label>
             <input
               type="text"
               placeholder="11:00"
               required
               value={settings.openingTime}
               onChange={(e) => setSettings({ ...settings, openingTime: e.target.value })}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-white font-mono focus:outline-none focus:border-amber-400"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 border border-neutral-300 text-neutral-900 font-mono focus:outline-none focus:border-amber-400 shadow-xs"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="text-neutral-400 font-bold block">Closing Time (24h)</label>
+            <label className="text-neutral-700 font-bold block">Closing Time (24h)</label>
             <input
               type="text"
               placeholder="23:00"
               required
               value={settings.closingTime}
               onChange={(e) => setSettings({ ...settings, closingTime: e.target.value })}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-white font-mono focus:outline-none focus:border-amber-400"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 border border-neutral-300 text-neutral-900 font-mono focus:outline-none focus:border-amber-400 shadow-xs"
             />
           </div>
 
           {/* Tables count & Unpaid timeout */}
           <div className="space-y-1">
-            <label className="text-neutral-400 font-bold block">Dine-in Tables Count</label>
+            <label className="text-neutral-700 font-bold block">Dine-in Tables Count</label>
             <input
               type="number"
               min="1"
@@ -237,12 +237,12 @@ export default function AdminSettingsPage() {
               onChange={(e) =>
                 setSettings({ ...settings, tablesCount: parseInt(e.target.value, 10) || 12 })
               }
-              className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-white font-medium focus:outline-none focus:border-amber-400"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 border border-neutral-300 text-neutral-900 font-medium focus:outline-none focus:border-amber-400 shadow-xs"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="text-neutral-400 font-bold block">
+            <label className="text-neutral-700 font-bold block">
               Unpaid Order Timeout (Minutes)
             </label>
             <input
@@ -257,21 +257,21 @@ export default function AdminSettingsPage() {
                   unpaidOrderTimeoutMins: parseInt(e.target.value, 10) || 15,
                 })
               }
-              className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-white font-medium focus:outline-none focus:border-amber-400"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 border border-neutral-300 text-neutral-900 font-medium focus:outline-none focus:border-amber-400 shadow-xs"
             />
           </div>
 
           {/* GST Configuration */}
-          <div className="sm:col-span-2 pt-2 border-t border-neutral-800/80 space-y-3">
+          <div className="sm:col-span-2 pt-2 border-t border-neutral-100 space-y-3">
             <div className="flex items-center gap-2">
               <input
                 id="gst-toggle"
                 type="checkbox"
                 checked={settings.gstEnabled}
                 onChange={(e) => setSettings({ ...settings, gstEnabled: e.target.checked })}
-                className="w-4 h-4 rounded border-neutral-700 text-amber-400 bg-neutral-950 focus:ring-0 cursor-pointer"
+                className="w-4 h-4 rounded border-neutral-300 text-amber-500 bg-white focus:ring-0 cursor-pointer"
               />
-              <label htmlFor="gst-toggle" className="text-neutral-200 font-bold cursor-pointer">
+              <label htmlFor="gst-toggle" className="text-neutral-900 font-bold cursor-pointer">
                 Enable GST Tax Calculation on Orders
               </label>
             </div>
@@ -279,17 +279,17 @@ export default function AdminSettingsPage() {
             {settings.gstEnabled && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                 <div className="space-y-1">
-                  <label className="text-neutral-400 font-bold block">Shop GSTIN</label>
+                  <label className="text-neutral-700 font-bold block">Shop GSTIN</label>
                   <input
                     type="text"
                     placeholder="29AAAAA0000A1Z5"
                     value={settings.gstin}
                     onChange={(e) => setSettings({ ...settings, gstin: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-white font-mono focus:outline-none focus:border-amber-400"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 border border-neutral-300 text-neutral-900 font-mono focus:outline-none focus:border-amber-400 shadow-xs"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-neutral-400 font-bold block">GST Percentage (%)</label>
+                  <label className="text-neutral-700 font-bold block">GST Percentage (%)</label>
                   <input
                     type="number"
                     min="0"
@@ -299,7 +299,7 @@ export default function AdminSettingsPage() {
                     onChange={(e) =>
                       setSettings({ ...settings, gstPercentage: parseFloat(e.target.value) || 5 })
                     }
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-white font-medium focus:outline-none focus:border-amber-400"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 border border-neutral-300 text-neutral-900 font-medium focus:outline-none focus:border-amber-400 shadow-xs"
                   />
                 </div>
               </div>
@@ -307,15 +307,15 @@ export default function AdminSettingsPage() {
           </div>
 
           {/* Thermal Printer Settings */}
-          <div className="sm:col-span-2 pt-2 border-t border-neutral-800/80 space-y-3">
-            <div className="flex items-center gap-2 text-white font-bold">
-              <Printer className="w-4 h-4 text-amber-400" />
+          <div className="sm:col-span-2 pt-2 border-t border-neutral-100 space-y-3">
+            <div className="flex items-center gap-2 text-neutral-900 font-bold">
+              <Printer className="w-4 h-4 text-amber-600" />
               <span>Thermal Receipt Slip Settings</span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-neutral-400 font-bold block">Receipt Paper Width</label>
+                <label className="text-neutral-700 font-bold block">Receipt Paper Width</label>
                 <select
                   value={settings.printerPaperWidth}
                   onChange={(e) =>
@@ -324,7 +324,7 @@ export default function AdminSettingsPage() {
                       printerPaperWidth: e.target.value as '80' | '58',
                     })
                   }
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-white font-medium focus:outline-none focus:border-amber-400 cursor-pointer"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 border border-neutral-300 text-neutral-900 font-medium focus:outline-none focus:border-amber-400 cursor-pointer shadow-xs"
                 >
                   <option value="80">80mm (Standard POS Thermal)</option>
                   <option value="58">58mm (Compact Thermal)</option>
@@ -332,13 +332,13 @@ export default function AdminSettingsPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-neutral-400 font-bold block">Auto-Print to Agent</label>
+                <label className="text-neutral-700 font-bold block">Auto-Print to Agent</label>
                 <select
                   value={settings.printerEnabled ? 'true' : 'false'}
                   onChange={(e) =>
                     setSettings({ ...settings, printerEnabled: e.target.value === 'true' })
                   }
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-white font-medium focus:outline-none focus:border-amber-400 cursor-pointer"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 border border-neutral-300 text-neutral-900 font-medium focus:outline-none focus:border-amber-400 cursor-pointer shadow-xs"
                 >
                   <option value="true">Enabled (Auto-dispatch print jobs)</option>
                   <option value="false">Disabled (Manual browser print only)</option>
@@ -361,38 +361,38 @@ export default function AdminSettingsPage() {
       </form>
 
       {/* 2. Critical Security: Shop UPI Configuration Form */}
-      <form onSubmit={handleSaveUpi} className="p-6 rounded-3xl bg-neutral-900 border-2 border-amber-400/40 space-y-6 shadow-2xl">
-        <div className="flex items-start justify-between border-b border-neutral-800 pb-3">
+      <form onSubmit={handleSaveUpi} className="p-6 rounded-3xl bg-white border-2 border-amber-400 space-y-6 shadow-sm">
+        <div className="flex items-start justify-between border-b border-neutral-100 pb-3">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <QrCode className="w-5 h-5 text-amber-400" />
-              <h2 className="font-black text-base text-white">
+              <QrCode className="w-5 h-5 text-amber-600" />
+              <h2 className="font-black text-base text-neutral-950">
                 Shop PhonePe / GPay UPI Configuration
               </h2>
             </div>
-            <p className="text-xs text-neutral-400">
+            <p className="text-xs text-neutral-500">
               Only the shop OWNER can modify payment credentials. Requires password re-authentication.
             </p>
           </div>
         </div>
 
         {upiMessage && (
-          <div className="p-3.5 rounded-xl bg-emerald-950/80 border border-emerald-500 text-emerald-300 text-xs flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+          <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs flex items-center gap-2 shadow-xs">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             <span>{upiMessage}</span>
           </div>
         )}
 
         {upiError && (
-          <div className="p-3.5 rounded-xl bg-rose-950/80 border border-rose-800 text-rose-300 text-xs flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+          <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-300 text-rose-800 text-xs flex items-center gap-2 shadow-xs">
+            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
             <span>{upiError}</span>
           </div>
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
           <div className="space-y-1">
-            <label className="text-neutral-300 font-bold block">
+            <label className="text-neutral-800 font-bold block">
               Shop UPI ID (VPA) *
             </label>
             <input
@@ -401,7 +401,7 @@ export default function AdminSettingsPage() {
               placeholder="wrapnation@okaxis"
               value={upiIdInput}
               onChange={(e) => setUpiIdInput(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-amber-400 font-mono text-sm focus:outline-none focus:border-amber-400 font-bold"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 border border-neutral-300 text-amber-700 font-mono text-sm focus:outline-none focus:border-amber-400 font-bold shadow-xs"
             />
             <p className="text-[10px] text-neutral-500">
               Must match the VPA on your shop PhonePe/GPay soundbox.
@@ -409,7 +409,7 @@ export default function AdminSettingsPage() {
           </div>
 
           <div className="space-y-1">
-            <label className="text-neutral-300 font-bold block">
+            <label className="text-neutral-800 font-bold block">
               Registered Payee Name *
             </label>
             <input
@@ -418,12 +418,12 @@ export default function AdminSettingsPage() {
               placeholder="Wrap Nation Fast Food"
               value={payeeNameInput}
               onChange={(e) => setPayeeNameInput(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-white font-medium focus:outline-none focus:border-amber-400"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 border border-neutral-300 text-neutral-900 font-medium focus:outline-none focus:border-amber-400 shadow-xs"
             />
           </div>
 
           <div className="sm:col-span-2 space-y-1">
-            <label className="text-neutral-300 font-bold block">
+            <label className="text-neutral-800 font-bold block">
               Static QR Image URL (Optional)
             </label>
             <input
@@ -431,17 +431,17 @@ export default function AdminSettingsPage() {
               placeholder="Leave empty to auto-generate dynamic QR from VPA"
               value={upiQrUrlInput}
               onChange={(e) => setUpiQrUrlInput(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-white text-xs focus:outline-none focus:border-amber-400 font-mono"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 border border-neutral-300 text-neutral-900 text-xs focus:outline-none focus:border-amber-400 font-mono shadow-xs"
             />
           </div>
 
           {/* Owner Current Password Verification */}
-          <div className="sm:col-span-2 p-4 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-2">
-            <div className="flex items-center gap-2 text-rose-400 font-bold text-xs">
-              <Lock className="w-4 h-4" />
+          <div className="sm:col-span-2 p-4 rounded-2xl bg-amber-50/70 border border-amber-300 space-y-2">
+            <div className="flex items-center gap-2 text-rose-700 font-bold text-xs">
+              <Lock className="w-4 h-4 text-rose-600" />
               <span>Owner Password Verification Required</span>
             </div>
-            <p className="text-[11px] text-neutral-400">
+            <p className="text-[11px] text-neutral-600">
               Re-enter your current password to authorize changes to the shop UPI ID or QR code.
             </p>
             <input
@@ -450,7 +450,7 @@ export default function AdminSettingsPage() {
               placeholder="Your current owner password"
               value={ownerPasswordInput}
               onChange={(e) => setOwnerPasswordInput(e.target.value)}
-              className="w-full sm:max-w-md px-3.5 py-2 rounded-xl bg-neutral-900 border border-neutral-700 text-white focus:outline-none focus:border-amber-400"
+              className="w-full sm:max-w-md px-3.5 py-2 rounded-xl bg-white border border-neutral-300 text-neutral-900 focus:outline-none focus:border-amber-400 shadow-xs"
             />
           </div>
         </div>
@@ -459,7 +459,7 @@ export default function AdminSettingsPage() {
           <button
             type="submit"
             disabled={savingUpi || !ownerPasswordInput}
-            className="py-3 px-6 rounded-xl bg-amber-400 hover:bg-amber-300 active:bg-amber-500 disabled:opacity-50 text-neutral-950 font-black text-xs uppercase tracking-wider transition shadow-lg flex items-center gap-2 cursor-pointer"
+            className="py-3 px-6 rounded-xl bg-amber-400 hover:bg-amber-300 active:bg-amber-500 disabled:opacity-50 text-neutral-950 font-black text-xs uppercase tracking-wider transition shadow-md flex items-center gap-2 cursor-pointer"
           >
             {savingUpi ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldAlert className="w-4 h-4" />}
             <span>Authorize & Update UPI QR</span>

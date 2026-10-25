@@ -68,13 +68,13 @@ export default function AdminNav({ user }: AdminNavProps) {
   ];
 
   return (
-    <header className="sticky top-0 z-40 bg-neutral-900 border-b border-neutral-800 shadow-md">
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-amber-200/80 shadow-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between">
         {/* Brand & Printer status */}
         <div className="flex items-center gap-4">
           <Link href="/admin" className="flex items-center gap-2">
-            <span className="font-black text-lg text-white tracking-tight">Wrap Nation</span>
-            <span className="text-amber-400 font-bold text-xs bg-amber-400/10 border border-amber-400/30 px-2 py-0.5 rounded-full">
+            <span className="font-black text-lg text-neutral-950 tracking-tight">Wrap Nation</span>
+            <span className="text-neutral-950 font-black text-[11px] bg-amber-400 border border-amber-500/40 px-2.5 py-0.5 rounded-full shadow-xs">
               POS
             </span>
           </Link>
@@ -88,8 +88,8 @@ export default function AdminNav({ user }: AdminNavProps) {
             }
             className={`hidden md:flex items-center gap-1.5 py-1 px-2.5 rounded-full text-[11px] font-semibold border ${
               printerOnline
-                ? 'bg-emerald-950/60 border-emerald-800 text-emerald-400'
-                : 'bg-neutral-800 border-neutral-700 text-neutral-400'
+                ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                : 'bg-neutral-100 border-neutral-200 text-neutral-600'
             }`}
           >
             <Printer className="w-3.5 h-3.5" />
@@ -113,8 +113,8 @@ export default function AdminNav({ user }: AdminNavProps) {
                 href={link.href}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition ${
                   isActive
-                    ? 'bg-amber-400 text-neutral-950 shadow-sm'
-                    : 'text-neutral-300 hover:text-white hover:bg-neutral-800'
+                    ? 'bg-amber-400 text-neutral-950 shadow-xs font-black'
+                    : 'text-neutral-600 hover:text-neutral-950 hover:bg-amber-50/80'
                 }`}
               >
                 <Icon className="w-3.5 h-3.5" />
@@ -127,15 +127,15 @@ export default function AdminNav({ user }: AdminNavProps) {
         {/* Right User profile & Logout */}
         <div className="flex items-center gap-3">
           <div className="text-right hidden sm:block">
-            <div className="text-xs font-bold text-white leading-tight">{user.name}</div>
-            <div className="text-[10px] text-amber-400/90 font-mono font-medium">
+            <div className="text-xs font-bold text-neutral-900 leading-tight">{user.name}</div>
+            <div className="text-[10px] text-amber-700 font-mono font-bold uppercase tracking-wider">
               {user.role}
             </div>
           </div>
 
           <button
             onClick={handleLogout}
-            className="p-2 rounded-xl text-neutral-400 hover:text-rose-400 hover:bg-neutral-800 transition cursor-pointer"
+            className="p-2 rounded-xl text-neutral-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
             title="Sign Out"
             aria-label="Sign Out"
           >
@@ -145,7 +145,7 @@ export default function AdminNav({ user }: AdminNavProps) {
       </div>
 
       {/* Mobile Nav Links Row */}
-      <div className="lg:hidden px-4 py-2 border-t border-neutral-850 flex items-center gap-1 overflow-x-auto no-scrollbar">
+      <div className="lg:hidden px-4 py-2 border-t border-amber-100 bg-[#FAF7F2] flex items-center gap-1 overflow-x-auto no-scrollbar">
         {navLinks.map((link) => {
           const isActive = pathname === link.href;
           const Icon = link.icon;
@@ -155,8 +155,8 @@ export default function AdminNav({ user }: AdminNavProps) {
               href={link.href}
               className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition ${
                 isActive
-                  ? 'bg-amber-400 text-neutral-950 shadow-sm'
-                  : 'text-neutral-400 hover:text-white hover:bg-neutral-800'
+                  ? 'bg-amber-400 text-neutral-950 shadow-xs font-black'
+                  : 'text-neutral-600 hover:text-neutral-950 hover:bg-white'
               }`}
             >
               <Icon className="w-3.5 h-3.5" />

@@ -118,27 +118,27 @@ export default function AdminMenuPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-white tracking-tight">Menu Management</h1>
-          <p className="text-xs text-neutral-400">
+          <h1 className="text-2xl font-black text-neutral-950 tracking-tight">Menu Management</h1>
+          <p className="text-xs text-neutral-600 font-medium">
             Control live item availability (Out of Stock toggles) & adjust prices
           </p>
         </div>
 
-        <div className="text-xs text-neutral-500 bg-neutral-900 border border-neutral-800 p-2.5 rounded-xl">
+        <div className="text-xs text-neutral-700 bg-white border border-amber-200 p-2.5 rounded-xl shadow-xs">
           💡 Price updates apply to future orders only. Historical orders preserve their original rates.
         </div>
       </div>
 
       {loading ? (
         <div className="py-20 text-center space-y-2">
-          <Loader2 className="w-8 h-8 animate-spin text-amber-400 mx-auto" />
+          <Loader2 className="w-8 h-8 animate-spin text-amber-500 mx-auto" />
           <p className="text-xs text-neutral-500">Loading menu items...</p>
         </div>
       ) : (
         <div className="space-y-8">
           {categories.map((category) => (
             <div key={category.id} className="space-y-3">
-              <h2 className="text-base font-black text-amber-400 uppercase tracking-wider border-b border-neutral-800 pb-2">
+              <h2 className="text-base font-black text-amber-800 uppercase tracking-wider border-b border-amber-200/80 pb-2">
                 {category.name} ({category.items.length})
               </h2>
 
@@ -146,25 +146,25 @@ export default function AdminMenuPage() {
                 {category.items.map((item) => (
                   <div
                     key={item.id}
-                    className={`p-4 rounded-2xl border transition flex flex-col justify-between gap-3 ${
+                    className={`p-4 rounded-2xl border transition flex flex-col justify-between gap-3 shadow-xs ${
                       item.isAvailable
-                        ? 'bg-neutral-900 border-neutral-800'
-                        : 'bg-neutral-950 border-neutral-850 opacity-60'
+                        ? 'bg-white border-neutral-200/90 hover:border-amber-400'
+                        : 'bg-neutral-50 border-neutral-200 opacity-60'
                     }`}
                   >
                     <div className="space-y-1.5">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-2">
                           <VegBadge isVeg={item.isVeg} />
-                          <h3 className="font-bold text-sm text-white">{item.name}</h3>
+                          <h3 className="font-bold text-sm text-neutral-900">{item.name}</h3>
                         </div>
 
                         {/* Stock Status Badge */}
                         <span
                           className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
                             item.isAvailable
-                              ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
-                              : 'bg-rose-950 text-rose-400 border border-rose-800'
+                              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                              : 'bg-rose-50 text-rose-800 border border-rose-200'
                           }`}
                         >
                           {item.isAvailable ? 'In Stock' : 'Out of Stock'}
@@ -172,12 +172,12 @@ export default function AdminMenuPage() {
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <span className="text-lg font-black text-white">
+                        <span className="text-lg font-black text-neutral-950">
                           {formatPaise(item.basePrice)}
                         </span>
                         <button
                           onClick={() => handleOpenEdit(item)}
-                          className="p-1 text-neutral-400 hover:text-amber-400 transition"
+                          className="p-1 text-neutral-400 hover:text-amber-700 transition"
                           title="Edit Price"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
@@ -185,7 +185,7 @@ export default function AdminMenuPage() {
                       </div>
 
                       {item.variants.length > 0 && (
-                        <div className="text-[11px] text-neutral-400 space-y-0.5 pt-1">
+                        <div className="text-[11px] text-neutral-600 space-y-0.5 pt-1">
                           {item.variants.map((v) => (
                             <div key={v.id}>
                               • {v.name}: +{formatPaise(v.priceDelta)}
@@ -196,23 +196,23 @@ export default function AdminMenuPage() {
                     </div>
 
                     {/* Stock Toggle Button */}
-                    <div className="pt-2 border-t border-neutral-800 flex items-center justify-between">
-                      <span className="text-xs text-neutral-400 font-medium">Availability</span>
+                    <div className="pt-2 border-t border-neutral-100 flex items-center justify-between">
+                      <span className="text-xs text-neutral-500 font-medium">Availability</span>
                       <button
                         onClick={() => handleToggleStock(item.id, item.isAvailable)}
                         disabled={togglingId === item.id}
-                        className={`flex items-center gap-1.5 py-1 px-3 rounded-xl text-xs font-bold transition cursor-pointer ${
+                        className={`flex items-center gap-1.5 py-1 px-3 rounded-xl text-xs font-bold transition cursor-pointer shadow-xs ${
                           item.isAvailable
-                            ? 'bg-emerald-950/80 border border-emerald-800 text-emerald-400 hover:bg-emerald-900'
-                            : 'bg-neutral-800 border border-neutral-700 text-neutral-400 hover:bg-neutral-750'
+                            ? 'bg-emerald-50 border border-emerald-200 text-emerald-800 hover:bg-emerald-100'
+                            : 'bg-neutral-100 border border-neutral-200 text-neutral-700 hover:bg-neutral-200'
                         }`}
                       >
                         {togglingId === item.id ? (
                           <Loader2 className="w-3.5 h-3.5 animate-spin" />
                         ) : item.isAvailable ? (
-                          <ToggleRight className="w-4 h-4 text-emerald-400" />
+                          <ToggleRight className="w-4 h-4 text-emerald-600" />
                         ) : (
-                          <ToggleLeft className="w-4 h-4" />
+                          <ToggleLeft className="w-4 h-4 text-neutral-400" />
                         )}
                         <span>{item.isAvailable ? 'In Stock' : 'Mark Out of Stock'}</span>
                       </button>
@@ -227,16 +227,16 @@ export default function AdminMenuPage() {
 
       {/* Edit Price Modal */}
       {editingItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="w-full max-w-sm bg-white border border-neutral-200 rounded-3xl p-6 shadow-2xl space-y-4">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="font-black text-lg text-white">Edit Base Price</h3>
-                <p className="text-xs text-neutral-400">{editingItem.name}</p>
+                <h3 className="font-black text-lg text-neutral-950">Edit Base Price</h3>
+                <p className="text-xs text-neutral-500">{editingItem.name}</p>
               </div>
               <button
                 onClick={() => setEditingItem(null)}
-                className="p-1 rounded-full text-neutral-400 hover:text-white bg-neutral-800"
+                className="p-1.5 rounded-full text-neutral-400 hover:text-neutral-900 bg-neutral-100 hover:bg-neutral-200 transition"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -244,7 +244,7 @@ export default function AdminMenuPage() {
 
             <form onSubmit={handleSavePrice} className="space-y-4 text-xs">
               <div className="space-y-1">
-                <label className="text-neutral-300 font-bold block">Base Price in INR (₹)</label>
+                <label className="text-neutral-800 font-bold block">Base Price in INR (₹)</label>
                 <input
                   type="number"
                   step="1"
@@ -252,7 +252,7 @@ export default function AdminMenuPage() {
                   required
                   value={newPriceRupees}
                   onChange={(e) => setNewPriceRupees(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-white font-bold text-base focus:outline-none focus:border-amber-400"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 border border-neutral-300 text-neutral-950 font-bold text-base focus:outline-none focus:border-amber-400"
                 />
               </div>
 
@@ -260,14 +260,14 @@ export default function AdminMenuPage() {
                 <button
                   type="button"
                   onClick={() => setEditingItem(null)}
-                  className="flex-1 py-2.5 rounded-xl bg-neutral-800 text-neutral-300 font-bold"
+                  className="flex-1 py-2.5 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-neutral-800 font-bold transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={savingPrice}
-                  className="flex-1 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-neutral-950 font-bold"
+                  className="flex-1 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-neutral-950 font-black shadow-xs transition"
                 >
                   {savingPrice ? 'Saving...' : 'Save Price'}
                 </button>

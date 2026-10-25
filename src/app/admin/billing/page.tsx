@@ -167,17 +167,17 @@ export default function ManualBillingPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-black text-white tracking-tight">
+        <h1 className="text-2xl font-black text-neutral-950 tracking-tight">
           Walk-in POS Manual Billing
         </h1>
-        <p className="text-xs text-neutral-400">
+        <p className="text-xs text-neutral-600 font-medium">
           Fast touch & keyboard-friendly billing for counter walk-in customers
         </p>
       </div>
 
       {successMessage && (
-        <div className="p-4 rounded-2xl bg-emerald-950/80 border border-emerald-500 text-emerald-300 text-sm flex items-center gap-3">
-          <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+        <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-sm flex items-center gap-3 shadow-xs">
+          <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
           <span className="font-bold">{successMessage}</span>
         </div>
       )}
@@ -189,10 +189,10 @@ export default function ManualBillingPage() {
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
             <button
               onClick={() => setSelectedCategory('all')}
-              className={`py-2 px-4 rounded-xl text-xs font-bold transition cursor-pointer whitespace-nowrap ${
+              className={`py-2 px-4 rounded-xl text-xs font-bold transition cursor-pointer whitespace-nowrap shadow-xs ${
                 selectedCategory === 'all'
-                  ? 'bg-amber-400 text-neutral-950 shadow-md'
-                  : 'bg-neutral-900 text-neutral-400 hover:text-white'
+                  ? 'bg-amber-400 text-neutral-950 font-black shadow-sm border border-amber-500/40'
+                  : 'bg-white text-neutral-700 hover:text-neutral-950 hover:bg-amber-50 border border-neutral-200/90'
               }`}
             >
               All Items ({allItems.length})
@@ -201,10 +201,10 @@ export default function ManualBillingPage() {
               <button
                 key={c.id}
                 onClick={() => setSelectedCategory(c.slug)}
-                className={`py-2 px-4 rounded-xl text-xs font-bold transition cursor-pointer whitespace-nowrap ${
+                className={`py-2 px-4 rounded-xl text-xs font-bold transition cursor-pointer whitespace-nowrap shadow-xs ${
                   selectedCategory === c.slug
-                    ? 'bg-amber-400 text-neutral-950 shadow-md'
-                    : 'bg-neutral-900 text-neutral-400 hover:text-white'
+                    ? 'bg-amber-400 text-neutral-950 font-black shadow-sm border border-amber-500/40'
+                    : 'bg-white text-neutral-700 hover:text-neutral-950 hover:bg-amber-50 border border-neutral-200/90'
                 }`}
               >
                 {c.name}
@@ -217,14 +217,14 @@ export default function ManualBillingPage() {
             {displayedItems.map((item) => (
               <div
                 key={item.id}
-                className="p-3.5 rounded-2xl bg-neutral-900 border border-neutral-800 flex flex-col justify-between gap-2.5 hover:border-neutral-700 transition"
+                className="p-3.5 rounded-2xl bg-white border border-neutral-200/90 shadow-xs flex flex-col justify-between gap-2.5 hover:border-amber-400 transition"
               >
                 <div className="space-y-1">
                   <div className="flex items-center gap-1.5">
                     <VegBadge isVeg={item.isVeg} />
-                    <span className="font-bold text-xs text-white line-clamp-1">{item.name}</span>
+                    <span className="font-bold text-xs text-neutral-900 line-clamp-1">{item.name}</span>
                   </div>
-                  <div className="font-black text-amber-400 text-sm">
+                  <div className="font-black text-amber-600 text-sm">
                     {formatPaise(item.basePrice)}
                   </div>
                 </div>
@@ -232,7 +232,7 @@ export default function ManualBillingPage() {
                 <div className="space-y-1 pt-1">
                   <button
                     onClick={() => addToCart(item)}
-                    className="w-full py-1.5 px-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-neutral-950 font-bold text-xs transition cursor-pointer"
+                    className="w-full py-1.5 px-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-neutral-950 font-black text-xs shadow-xs transition cursor-pointer"
                   >
                     + Add Regular
                   </button>
@@ -241,7 +241,7 @@ export default function ManualBillingPage() {
                     <button
                       key={v.id}
                       onClick={() => addToCart(item, v)}
-                      className="w-full py-1 px-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-[10px] font-semibold transition cursor-pointer"
+                      className="w-full py-1 px-2 rounded-lg bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-[10px] font-bold transition cursor-pointer"
                     >
                       + Combo ({formatPaise(item.basePrice + v.priceDelta)})
                     </button>
@@ -253,28 +253,28 @@ export default function ManualBillingPage() {
         </div>
 
         {/* Right Col: Current Bill & Checkout */}
-        <div className="p-5 rounded-3xl bg-neutral-900 border border-neutral-800 flex flex-col justify-between gap-4 h-fit sticky top-20 shadow-2xl">
+        <div className="p-5 rounded-3xl bg-white border border-neutral-200/90 shadow-md flex flex-col justify-between gap-4 h-fit sticky top-20">
           <div className="space-y-4">
-            <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
-              <h2 className="font-black text-base text-white">Current Order</h2>
-              <span className="text-xs text-neutral-400 font-bold">
+            <div className="flex items-center justify-between border-b border-neutral-200 pb-3">
+              <h2 className="font-black text-base text-neutral-950">Current Order</h2>
+              <span className="text-xs text-neutral-500 font-bold">
                 {cartItems.reduce((s, i) => s + i.quantity, 0)} items
               </span>
             </div>
 
             {/* Cart Items List */}
             {cartItems.length === 0 ? (
-              <div className="py-12 text-center text-xs text-neutral-500">
+              <div className="py-12 text-center text-xs text-neutral-400">
                 Tap items on the left to add to bill
               </div>
             ) : (
-              <div className="divide-y divide-neutral-800/60 max-h-64 overflow-y-auto space-y-2 pr-1 text-xs">
+              <div className="divide-y divide-neutral-100 max-h-64 overflow-y-auto space-y-2 pr-1 text-xs">
                 {cartItems.map((item) => (
                   <div key={item.key} className="pt-2 flex items-center justify-between gap-2">
                     <div className="space-y-0.5">
-                      <div className="font-bold text-white leading-tight">{item.name}</div>
+                      <div className="font-bold text-neutral-900 leading-tight">{item.name}</div>
                       {item.variantName && (
-                        <div className="text-[10px] text-amber-400">{item.variantName}</div>
+                        <div className="text-[10px] text-amber-700 font-semibold">{item.variantName}</div>
                       )}
                       <div className="text-neutral-500 font-mono">
                         {formatPaise(item.unitPrice)}
@@ -282,24 +282,24 @@ export default function ManualBillingPage() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <div className="flex items-center rounded-lg bg-neutral-950 border border-neutral-800">
+                      <div className="flex items-center rounded-lg bg-neutral-100 border border-neutral-200">
                         <button
                           onClick={() => updateQuantity(item.key, -1)}
-                          className="p-1 hover:text-rose-400 transition"
+                          className="p-1 hover:text-rose-600 transition"
                         >
-                          <Minus className="w-3 h-3" />
+                          <Minus className="w-3 h-3 text-neutral-700" />
                         </button>
-                        <span className="px-1.5 font-bold text-white min-w-[16px] text-center">
+                        <span className="px-1.5 font-bold text-neutral-900 min-w-[16px] text-center">
                           {item.quantity}
                         </span>
                         <button
                           onClick={() => updateQuantity(item.key, 1)}
-                          className="p-1 hover:text-white transition"
+                          className="p-1 hover:text-neutral-950 transition"
                         >
-                          <Plus className="w-3 h-3" />
+                          <Plus className="w-3 h-3 text-neutral-700" />
                         </button>
                       </div>
-                      <span className="font-bold text-white min-w-[50px] text-right">
+                      <span className="font-bold text-neutral-950 min-w-[50px] text-right">
                         {formatPaise(item.unitPrice * item.quantity)}
                       </span>
                     </div>
@@ -309,21 +309,21 @@ export default function ManualBillingPage() {
             )}
 
             {/* Total */}
-            <div className="border-t border-neutral-800 pt-3 flex justify-between items-center">
-              <span className="text-xs font-bold text-neutral-400">Total Amount</span>
-              <span className="text-2xl font-black text-amber-400">{formatPaise(subtotal)}</span>
+            <div className="border-t border-neutral-200 pt-3 flex justify-between items-center">
+              <span className="text-xs font-bold text-neutral-600">Total Amount</span>
+              <span className="text-2xl font-black text-neutral-950">{formatPaise(subtotal)}</span>
             </div>
 
             {/* Payment Method Selector */}
-            <div className="space-y-2 pt-2 border-t border-neutral-800">
+            <div className="space-y-2 pt-2 border-t border-neutral-200">
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <button
                   type="button"
                   onClick={() => setPaymentMethod('CASH')}
-                  className={`py-2 px-3 rounded-xl border flex items-center justify-center gap-1.5 font-bold transition cursor-pointer ${
+                  className={`py-2 px-3 rounded-xl border flex items-center justify-center gap-1.5 font-bold transition cursor-pointer shadow-xs ${
                     paymentMethod === 'CASH'
-                      ? 'border-amber-400 bg-amber-400 text-neutral-950'
-                      : 'border-neutral-800 bg-neutral-950 text-neutral-400'
+                      ? 'border-amber-400 bg-amber-400 text-neutral-950 font-black'
+                      : 'border-neutral-200 bg-neutral-50 text-neutral-700 hover:bg-neutral-100'
                   }`}
                 >
                   <Banknote className="w-3.5 h-3.5" />
@@ -333,10 +333,10 @@ export default function ManualBillingPage() {
                 <button
                   type="button"
                   onClick={() => setPaymentMethod('UPI')}
-                  className={`py-2 px-3 rounded-xl border flex items-center justify-center gap-1.5 font-bold transition cursor-pointer ${
+                  className={`py-2 px-3 rounded-xl border flex items-center justify-center gap-1.5 font-bold transition cursor-pointer shadow-xs ${
                     paymentMethod === 'UPI'
-                      ? 'border-amber-400 bg-amber-400 text-neutral-950'
-                      : 'border-neutral-800 bg-neutral-950 text-neutral-400'
+                      ? 'border-amber-400 bg-amber-400 text-neutral-950 font-black'
+                      : 'border-neutral-200 bg-neutral-50 text-neutral-700 hover:bg-neutral-100'
                   }`}
                 >
                   <QrCode className="w-3.5 h-3.5" />
@@ -350,7 +350,7 @@ export default function ManualBillingPage() {
                   placeholder="UTR / Ref digits (optional)"
                   value={utr}
                   onChange={(e) => setUtr(e.target.value)}
-                  className="w-full px-3 py-1.5 rounded-xl bg-neutral-950 border border-neutral-800 text-white text-xs focus:outline-none focus:border-amber-400 font-mono"
+                  className="w-full px-3 py-2 rounded-xl bg-neutral-50 border border-neutral-300 text-neutral-900 text-xs focus:outline-none focus:border-amber-400 font-mono shadow-xs"
                 />
               )}
             </div>
@@ -359,7 +359,7 @@ export default function ManualBillingPage() {
           <button
             onClick={handleCheckout}
             disabled={loading || cartItems.length === 0}
-            className="w-full py-3.5 px-4 rounded-2xl bg-amber-400 hover:bg-amber-300 active:bg-amber-500 disabled:opacity-50 text-neutral-950 font-black text-sm uppercase tracking-wider shadow-lg transition flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full py-3.5 px-4 rounded-2xl bg-amber-400 hover:bg-amber-300 active:bg-amber-500 disabled:opacity-50 text-neutral-950 font-black text-sm uppercase tracking-wider shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
           >
             {loading ? (
               <>

@@ -75,23 +75,23 @@ export default function AdminReportsPage() {
       {/* Header & Date Selector */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
+          <h1 className="text-2xl font-black text-neutral-950 tracking-tight flex items-center gap-2">
             <span>Daily Sales & Reconciliation</span>
-            <BarChart3 className="w-6 h-6 text-amber-400" />
+            <BarChart3 className="w-6 h-6 text-amber-500" />
           </h1>
-          <p className="text-xs text-neutral-400">
+          <p className="text-xs text-neutral-600 font-medium">
             Reconcile daily counter cash and PhonePe/GPay UPI statement
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-xs">
-            <Calendar className="w-4 h-4 text-amber-400" />
+          <div className="flex items-center gap-2 bg-white border border-neutral-200 rounded-xl px-3 py-2 text-xs shadow-xs">
+            <Calendar className="w-4 h-4 text-amber-600" />
             <input
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="bg-transparent text-white font-bold focus:outline-none"
+              className="bg-transparent text-neutral-900 font-bold focus:outline-none"
             />
           </div>
 
@@ -106,25 +106,25 @@ export default function AdminReportsPage() {
       </div>
 
       {error ? (
-        <div className="p-6 rounded-3xl bg-neutral-900 border border-rose-900/60 text-center space-y-2">
+        <div className="p-6 rounded-3xl bg-white border border-rose-300 text-center space-y-2 shadow-sm">
           <AlertCircle className="w-8 h-8 text-rose-500 mx-auto" />
-          <h3 className="font-bold text-white text-base">Restricted Access</h3>
-          <p className="text-xs text-neutral-400 max-w-sm mx-auto">{error}</p>
+          <h3 className="font-bold text-neutral-950 text-base">Restricted Access</h3>
+          <p className="text-xs text-neutral-600 max-w-sm mx-auto">{error}</p>
         </div>
       ) : loading || !report ? (
         <div className="py-20 text-center space-y-2">
-          <Loader2 className="w-8 h-8 animate-spin text-amber-400 mx-auto" />
+          <Loader2 className="w-8 h-8 animate-spin text-amber-500 mx-auto" />
           <p className="text-xs text-neutral-500">Calculating financial metrics...</p>
         </div>
       ) : (
         <div className="space-y-6">
           {/* Top Revenue Summary Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="p-5 rounded-3xl bg-neutral-900 border border-neutral-800 space-y-2 shadow-lg">
-              <span className="text-xs text-neutral-400 font-bold uppercase tracking-wider block">
+            <div className="p-5 rounded-3xl bg-white border border-neutral-200/90 space-y-2 shadow-xs">
+              <span className="text-xs text-neutral-500 font-bold uppercase tracking-wider block">
                 Total Revenue
               </span>
-              <div className="text-3xl font-black text-amber-400">
+              <div className="text-3xl font-black text-amber-600">
                 {report.totalRevenueFormatted}
               </div>
               <p className="text-[11px] text-neutral-500">
@@ -132,14 +132,14 @@ export default function AdminReportsPage() {
               </p>
             </div>
 
-            <div className="p-5 rounded-3xl bg-neutral-900 border border-neutral-800 space-y-2 shadow-lg">
+            <div className="p-5 rounded-3xl bg-white border border-neutral-200/90 space-y-2 shadow-xs">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-neutral-400 font-bold uppercase tracking-wider block">
+                <span className="text-xs text-neutral-500 font-bold uppercase tracking-wider block">
                   UPI Soundbox Revenue
                 </span>
-                <CreditCard className="w-4 h-4 text-amber-400" />
+                <CreditCard className="w-4 h-4 text-amber-600" />
               </div>
-              <div className="text-3xl font-black text-white">
+              <div className="text-3xl font-black text-neutral-950">
                 {report.upiRevenueFormatted}
               </div>
               <p className="text-[11px] text-neutral-500">
@@ -147,31 +147,31 @@ export default function AdminReportsPage() {
               </p>
             </div>
 
-            <div className="p-5 rounded-3xl bg-neutral-900 border border-neutral-800 space-y-2 shadow-lg">
+            <div className="p-5 rounded-3xl bg-white border border-neutral-200/90 space-y-2 shadow-xs">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-neutral-400 font-bold uppercase tracking-wider block">
+                <span className="text-xs text-neutral-500 font-bold uppercase tracking-wider block">
                   Cash Collected
                 </span>
-                <Banknote className="w-4 h-4 text-emerald-400" />
+                <Banknote className="w-4 h-4 text-emerald-600" />
               </div>
-              <div className="text-3xl font-black text-white">
+              <div className="text-3xl font-black text-neutral-950">
                 {report.cashRevenueFormatted}
               </div>
               <p className="text-[11px] text-neutral-500">Physical drawer cash total</p>
             </div>
 
-            <div className="p-5 rounded-3xl bg-neutral-900 border border-neutral-800 space-y-2 shadow-lg">
-              <span className="text-xs text-neutral-400 font-bold uppercase tracking-wider block">
+            <div className="p-5 rounded-3xl bg-white border border-neutral-200/90 space-y-2 shadow-xs">
+              <span className="text-xs text-neutral-500 font-bold uppercase tracking-wider block">
                 Dine-in vs Takeaway
               </span>
-              <div className="text-xl font-black text-white flex items-center gap-3 pt-1">
-                <span className="flex items-center gap-1 text-sm text-neutral-300">
-                  <Utensils className="w-4 h-4 text-amber-400" />
+              <div className="text-xl font-black text-neutral-950 flex items-center gap-3 pt-1">
+                <span className="flex items-center gap-1 text-sm text-neutral-800 font-bold">
+                  <Utensils className="w-4 h-4 text-amber-600" />
                   {report.dineInOrdersCount} Dine-in
                 </span>
-                <span className="text-neutral-600">/</span>
-                <span className="flex items-center gap-1 text-sm text-neutral-300">
-                  <ShoppingBag className="w-4 h-4 text-amber-400" />
+                <span className="text-neutral-400">/</span>
+                <span className="flex items-center gap-1 text-sm text-neutral-800 font-bold">
+                  <ShoppingBag className="w-4 h-4 text-amber-600" />
                   {report.takeawayOrdersCount} Takeaway
                 </span>
               </div>
@@ -180,42 +180,42 @@ export default function AdminReportsPage() {
           </div>
 
           {/* Top Selling Items Leaderboard */}
-          <div className="p-6 rounded-3xl bg-neutral-900 border border-neutral-800 space-y-4 shadow-xl">
-            <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
-              <h2 className="text-base font-black text-white flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-amber-400" />
+          <div className="p-6 rounded-3xl bg-white border border-neutral-200/90 space-y-4 shadow-sm">
+            <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
+              <h2 className="text-base font-black text-neutral-950 flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-amber-600" />
                 <span>Best Selling Items</span>
               </h2>
-              <span className="text-xs text-neutral-500">Ranked by volume sold</span>
+              <span className="text-xs text-neutral-500 font-semibold">Ranked by volume sold</span>
             </div>
 
             {report.topSellingItems.length === 0 ? (
-              <p className="text-neutral-500 text-xs py-4 text-center">
+              <p className="text-neutral-400 text-xs py-4 text-center">
                 No sales recorded for this date.
               </p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead>
-                    <tr className="border-b border-neutral-800 text-neutral-400 font-bold uppercase tracking-wider">
+                    <tr className="border-b border-neutral-200 text-neutral-500 font-bold uppercase tracking-wider">
                       <th className="py-2.5">Item Name</th>
                       <th className="py-2.5 text-center">Quantity Sold</th>
                       <th className="py-2.5 text-right">Revenue Generated</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-neutral-800/60">
+                  <tbody className="divide-y divide-neutral-100">
                     {report.topSellingItems.map((item, idx) => (
-                      <tr key={item.itemName} className="hover:bg-neutral-850/50 transition">
-                        <td className="py-3 font-bold text-white flex items-center gap-2">
-                          <span className="w-5 h-5 rounded-full bg-neutral-800 text-neutral-400 flex items-center justify-center text-[10px] font-black">
+                      <tr key={item.itemName} className="hover:bg-amber-50/50 transition">
+                        <td className="py-3 font-bold text-neutral-900 flex items-center gap-2">
+                          <span className="w-5 h-5 rounded-full bg-neutral-100 text-neutral-700 flex items-center justify-center text-[10px] font-black border border-neutral-200">
                             {idx + 1}
                           </span>
                           <span>{item.itemName}</span>
                         </td>
-                        <td className="py-3 text-center font-bold text-neutral-300">
+                        <td className="py-3 text-center font-bold text-neutral-700">
                           {item.quantity}
                         </td>
-                        <td className="py-3 text-right font-black text-amber-400">
+                        <td className="py-3 text-right font-black text-amber-700">
                           {item.revenueFormatted}
                         </td>
                       </tr>

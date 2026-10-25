@@ -122,6 +122,7 @@ export default function CartPage() {
       try {
         sessionStorage.setItem('wrapnation_order_' + data.order.id, JSON.stringify(data.order));
         localStorage.setItem('wrapnation_order_' + data.order.id, JSON.stringify(data.order));
+        localStorage.setItem('wrapnation_last_table_order', data.order.id);
       } catch {}
 
       // Clear cart and redirect to order status tracking page

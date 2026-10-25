@@ -21,7 +21,7 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col">
+    <div className="min-h-screen bg-[#FAF7F2] text-neutral-900 flex flex-col">
       <AdminNav
         user={{
           name: user.name,

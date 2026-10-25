@@ -4,6 +4,8 @@ import TableTokenClientHandler from './TableTokenClientHandler';
 import Link from 'next/link';
 import { AlertCircle, QrCode } from 'lucide-react';
 
+import { getActiveOrderForTable } from '@/server/services/orderService';
+
 export default async function TableQRPage({
   params,
 }: {
@@ -37,10 +39,13 @@ export default async function TableQRPage({
     );
   }
 
+  const activeOrder = await getActiveOrderForTable(verification.tableNumber);
+
   return (
     <TableTokenClientHandler
       token={token}
       tableNumber={verification.tableNumber}
+      activeOrder={activeOrder}
     />
   );
 }

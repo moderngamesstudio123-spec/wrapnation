@@ -4,6 +4,7 @@ import { requireAuth } from '@/lib/auth/session';
 import { signTableToken } from '@/lib/security/hmac';
 import { getSettings } from '@/server/services/settingService';
 import QRCode from 'qrcode';
+import { getActiveOrderForTable } from '@/server/services/orderService';
 
 import os from 'os';
 
@@ -45,6 +46,14 @@ export async function GET(req: NextRequest) {
     signedToken: string;
     orderUrl: string;
     qrDataUrl: string;
+    isOccupied?: boolean;
+    activeOrder?: {
+      id: string;
+      orderNumber: number;
+      status: string;
+      total?: number;
+      createdAt: string;
+    } | null;
   }> = [];
 
   for (let i = 1; i <= tablesCount; i++) {
@@ -58,11 +67,15 @@ export async function GET(req: NextRequest) {
       color: { dark: '#000000', light: '#ffffff' },
     });
 
+    const activeOrder = await getActiveOrderForTable(i);
+
     tables.push({
       tableNumber: i,
       signedToken,
       orderUrl,
       qrDataUrl,
+      isOccupied: !!activeOrder,
+      activeOrder: activeOrder || null,
     });
   }
 

@@ -8,7 +8,14 @@ import { sseBroker } from '@/lib/sse/broker';
 import { logAudit } from './auditService';
 import { OrderStatus, PaymentStatus, PaymentMethod, OrderType, User } from '@prisma/client';
 import { DEFAULT_CATEGORIES } from './defaultMenu';
-import { saveFallbackOrder, getNextOrderNumber } from './orderStore';
+import {
+  saveFallbackOrder,
+  getNextOrderNumber,
+  setTableOccupied,
+  vacateTableStore,
+  getTableOccupancy,
+  getAllOccupiedTables,
+} from './orderStore';
 
 const ALL_FALLBACK_ITEMS = DEFAULT_CATEGORIES.flatMap((c) => c.items);
 
@@ -537,3 +544,82 @@ export async function expireStaleUnpaidOrders(): Promise<number> {
 
   return staleOrders.length;
 }
+
+/**
+ * Gets the active order occupying a table (if any).
+ */
+export async function getActiveOrderForTable(
+  tableNumber: number
+): Promise<{ id: string; orderNumber: number; status: string; total?: number; createdAt: string } | null> {
+  try {
+    const active = await prisma.order.findFirst({
+      where: {
+        tableNumber,
+        type: OrderType.DINE_IN,
+        status: { in: [OrderStatus.AWAITING_PAYMENT, OrderStatus.PAID, OrderStatus.PREPARING, OrderStatus.READY] },
+      },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true, orderNumber: true, status: true, total: true, createdAt: true },
+    });
+    if (active) {
+      return {
+        id: active.id,
+        orderNumber: active.orderNumber,
+        status: active.status,
+        total: active.total,
+        createdAt: active.createdAt.toISOString(),
+      };
+    }
+  } catch {}
+
+  const fallback = getTableOccupancy(tableNumber);
+  if (fallback) {
+    return {
+      id: fallback.orderId,
+      orderNumber: fallback.orderNumber,
+      status: 'PREPARING',
+      createdAt: fallback.occupiedAt,
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Vacates a dining table, marking active orders as COMPLETED and freeing it for new guests.
+ */
+export async function vacateTable(tableNumber: number, staffUser?: User): Promise<void> {
+  try {
+    const activeOrders = await prisma.order.findMany({
+      where: {
+        tableNumber,
+        type: OrderType.DINE_IN,
+        status: { in: [OrderStatus.AWAITING_PAYMENT, OrderStatus.PAID, OrderStatus.PREPARING, OrderStatus.READY] },
+      },
+    });
+
+    for (const order of activeOrders) {
+      await prisma.order.update({
+        where: { id: order.id },
+        data: { status: OrderStatus.COMPLETED, completedAt: new Date() },
+      });
+      sseBroker.broadcast(
+        'ORDER_STATUS_CHANGED',
+        { orderId: order.id, orderNumber: order.orderNumber, status: OrderStatus.COMPLETED },
+        order.id
+      );
+    }
+  } catch {}
+
+  vacateTableStore(tableNumber);
+
+  if (staffUser) {
+    logAudit({
+      userId: staffUser.id,
+      action: 'TABLE_VACATED',
+      resource: `table:${tableNumber}`,
+      details: { tableNumber, userEmail: staffUser.email, userRole: staffUser.role },
+    }).catch(() => {});
+  }
+}
+
