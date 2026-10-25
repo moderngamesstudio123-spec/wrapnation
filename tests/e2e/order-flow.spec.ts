@@ -11,8 +11,8 @@ test.describe('Wrap Nation End-to-End Order Flow', () => {
 
     // 2. Click Order Takeaway to enter menu
     await page.click('text=Order Takeaway');
-    await page.waitForURL('**/menu');
-    await expect(page.getByText('Takeaway', { exact: true })).toBeVisible();
+    await page.waitForURL('**/menu', { timeout: 10000 });
+    await expect(page.locator('header').getByText('Takeaway', { exact: true })).toBeVisible();
 
     // 3. Verify category items appear
     await expect(page.getByRole('heading', { name: 'Chicken Wrap', exact: true })).toBeVisible();

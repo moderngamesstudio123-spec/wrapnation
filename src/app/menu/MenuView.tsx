@@ -17,6 +17,7 @@ interface CategoryData {
     basePrice: number;
     isVeg: boolean;
     isAvailable: boolean;
+    imageUrl?: string | null;
     variants: Array<{
       id: string;
       name: string;
@@ -42,6 +43,7 @@ interface MenuViewProps {
 export default function MenuView({
   initialCategories,
   shopName,
+  shopPhone,
 }: MenuViewProps) {
   const { isDineIn, tableNumber } = useCart();
   const [categories] = useState<CategoryData[]>(initialCategories);
@@ -106,6 +108,13 @@ export default function MenuView({
       };
     })
     .filter((cat) => cat.items.length > 0);
+
+  const categoryIcons: Record<string, string> = {
+    wraps: '🌯',
+    burgers: '🍔',
+    'fried-chicken': '🍗',
+    snacks: '🍟',
+  };
 
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100 pb-28">
@@ -189,13 +198,14 @@ export default function MenuView({
                 <button
                   key={cat.id}
                   onClick={() => scrollToCategory(cat.slug)}
-                  className={`py-1.5 px-4 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-200 cursor-pointer shrink-0 ${
+                  className={`py-1.5 px-4 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-200 cursor-pointer shrink-0 flex items-center gap-1.5 ${
                     isActive
-                      ? 'bg-amber-400 text-neutral-950 shadow-md'
+                      ? 'bg-amber-400 text-neutral-950 shadow-md font-black'
                       : 'bg-neutral-900 text-neutral-400 hover:text-white hover:bg-neutral-800'
                   }`}
                 >
-                  {cat.name}
+                  <span>{categoryIcons[cat.slug] || '🍽️'}</span>
+                  <span>{cat.name}</span>
                 </button>
               );
             })}
@@ -231,15 +241,16 @@ export default function MenuView({
               className="space-y-3 scroll-mt-36"
             >
               <div className="flex items-center justify-between border-b border-neutral-800/80 pb-2">
-                <h2 className="font-black text-lg text-white uppercase tracking-wider">
-                  {cat.name}
+                <h2 className="font-black text-lg text-white uppercase tracking-wider flex items-center gap-2">
+                  <span>{categoryIcons[cat.slug] || '🍽️'}</span>
+                  <span>{cat.name}</span>
                 </h2>
                 <span className="text-xs text-neutral-500 font-semibold">
                   {cat.items.length} {cat.items.length === 1 ? 'item' : 'items'}
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 gap-3">
+              <div className="grid grid-cols-1 gap-4">
                 {cat.items.map((item) => (
                   <MenuItemCard key={item.id} item={item} />
                 ))}
@@ -248,6 +259,18 @@ export default function MenuView({
           ))
         )}
       </main>
+
+      {/* Floating WhatsApp Help Button */}
+      <a
+        href={`https://wa.me/${(shopPhone || '919876543210').replace(/\D/g, '')}?text=${encodeURIComponent('Hi Wrap Nation! I need help with my menu order.')}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-24 right-4 z-40 py-2.5 px-4 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-2xl flex items-center gap-2 transition-all hover:scale-105 active:scale-95 border border-emerald-400/40"
+        aria-label="Chat with Wrap Nation on WhatsApp"
+      >
+        <span className="text-base">💬</span>
+        <span className="font-black">WhatsApp</span>
+      </a>
 
       {/* 4. Bottom Sticky Cart Bar */}
       <BottomCartBar />

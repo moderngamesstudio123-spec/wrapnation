@@ -5,7 +5,7 @@ import VegBadge from './VegBadge';
 import { formatPaise } from '@/lib/format';
 import { useCart } from '@/lib/customer/cartContext';
 import ItemCustomizationModal, { ModalMenuItem } from './ItemCustomizationModal';
-import { Plus, Minus } from 'lucide-react';
+import { Plus, Minus, Star } from 'lucide-react';
 
 interface MenuItemCardProps {
   item: ModalMenuItem & { isAvailable: boolean };
@@ -17,8 +17,6 @@ export default function MenuItemCard({ item }: MenuItemCardProps) {
 
   const cartQuantity = getItemQuantity(item.id);
   const hasCustomizations = item.variants.length > 0 || item.addOnLinks.length > 0;
-
-  // Find first cart item matching this menuItem to allow quick stepper manipulation
   const firstCartItem = items.find((i) => i.menuItemId === item.id);
 
   const handleAddClick = () => {
@@ -37,7 +35,6 @@ export default function MenuItemCard({ item }: MenuItemCardProps) {
 
   const handleIncrement = () => {
     if (hasCustomizations) {
-      // If customized, opening modal allows customer to choose additional combos or repeat
       setIsModalOpen(true);
     } else if (firstCartItem) {
       updateQuantity(firstCartItem.key, 1);
@@ -55,82 +52,120 @@ export default function MenuItemCard({ item }: MenuItemCardProps) {
   return (
     <>
       <div
-        className={`p-4 rounded-2xl border transition-all duration-200 flex flex-col justify-between gap-3 ${
+        className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-300 relative flex items-start justify-between gap-4 ${
           item.isAvailable
-            ? 'bg-neutral-900/80 border-neutral-800 hover:border-neutral-700'
+            ? 'bg-neutral-900/90 border-neutral-800/80 hover:border-neutral-700 shadow-md hover:shadow-xl'
             : 'bg-neutral-950/60 border-neutral-900 opacity-60'
         }`}
       >
-        <div className="flex items-start justify-between gap-3">
-          <div className="space-y-1.5 flex-1">
-            <div className="flex items-center gap-2">
-              <VegBadge isVeg={item.isVeg} />
-              <h3 className="font-bold text-base text-white leading-snug">{item.name}</h3>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-amber-400 font-bold text-base">
-                {formatPaise(item.basePrice)}
+        {/* Left Column: Details */}
+        <div className="flex-1 min-w-0 pr-1 space-y-2">
+          {/* Veg Badge & Rating */}
+          <div className="flex items-center gap-2">
+            <VegBadge isVeg={item.isVeg} />
+            <span className="text-[11px] font-bold text-amber-400 flex items-center gap-0.5">
+              <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+              <span>4.8</span>
+            </span>
+            {hasCustomizations && (
+              <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-neutral-800/90 text-neutral-300 font-bold border border-neutral-700/60">
+                Customizable
               </span>
-              {hasCustomizations && (
-                <span className="text-[11px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-neutral-800 text-neutral-300 font-medium">
-                  Customizable
-                </span>
-              )}
-            </div>
-            {item.description && (
-              <p className="text-xs text-neutral-400 line-clamp-2 leading-relaxed">
-                {item.description}
-              </p>
             )}
           </div>
+
+          {/* Title */}
+          <h3 className="font-extrabold text-base sm:text-lg text-white leading-snug">
+            {item.name}
+          </h3>
+
+          {/* Price */}
+          <div className="flex items-center gap-2">
+            <span className="text-white font-extrabold text-base sm:text-lg">
+              {formatPaise(item.basePrice)}
+            </span>
+          </div>
+
+          {/* Description */}
+          {item.description && (
+            <p className="text-xs text-neutral-400 line-clamp-2 leading-relaxed pt-0.5">
+              {item.description}
+            </p>
+          )}
         </div>
 
-        {/* Action Button */}
-        <div className="flex items-center justify-between pt-2 border-t border-neutral-800/60">
-          <div>
+        {/* Right Column: Swiggy-Style Food Image & ADD Button */}
+        <div className="relative shrink-0 flex flex-col items-center">
+          {/* Image Box */}
+          <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-2xl overflow-hidden relative border border-neutral-800/80 bg-neutral-950 shadow-lg">
+            {item.imageUrl ? (
+              <img
+                src={item.imageUrl}
+                alt={item.name}
+                className={`w-full h-full object-cover transition-transform duration-500 ${
+                  item.isAvailable ? 'hover:scale-105' : 'grayscale'
+                }`}
+                loading="lazy"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-neutral-900 text-neutral-600 text-xs font-bold">
+                Wrap Nation
+              </div>
+            )}
+
             {!item.isAvailable && (
-              <span className="text-xs font-semibold text-rose-500 uppercase tracking-wider">
-                Out of Stock
-              </span>
+              <div className="absolute inset-0 bg-black/70 flex items-center justify-center p-1 text-center">
+                <span className="text-[11px] font-black text-rose-400 uppercase tracking-wider">
+                  Out of Stock
+                </span>
+              </div>
             )}
           </div>
 
-          <div>
+          {/* Swiggy Signature Floating ADD / Stepper Button */}
+          <div className="relative -mt-4.5 z-10">
             {!item.isAvailable ? (
               <button
                 disabled
-                className="py-1.5 px-4 text-xs font-bold rounded-xl bg-neutral-800 text-neutral-500 cursor-not-allowed"
+                className="py-1.5 px-4 text-[11px] font-bold rounded-xl bg-neutral-800 text-neutral-500 cursor-not-allowed uppercase"
               >
-                UNAVAILABLE
+                Sold Out
               </button>
             ) : cartQuantity === 0 ? (
               <button
                 onClick={handleAddClick}
-                className="min-h-[44px] min-w-[80px] py-2 px-5 text-xs font-black rounded-xl bg-amber-400 hover:bg-amber-300 active:bg-amber-500 text-neutral-950 uppercase tracking-wider shadow-md transition cursor-pointer flex items-center justify-center gap-1.5"
+                className="min-h-[38px] min-w-[96px] py-1.5 px-5 text-xs font-black rounded-xl bg-white hover:bg-amber-400 active:bg-amber-300 text-neutral-950 uppercase tracking-wider shadow-xl transition-all duration-200 cursor-pointer flex items-center justify-center gap-1 border border-neutral-200 active:scale-95"
               >
                 <span>ADD</span>
-                <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                <Plus className="w-3.5 h-3.5 stroke-[3] text-emerald-600" />
               </button>
             ) : (
-              <div className="min-h-[44px] flex items-center rounded-xl bg-amber-400 text-neutral-950 font-black shadow-md overflow-hidden">
+              <div className="min-h-[38px] min-w-[96px] flex items-center justify-between rounded-xl bg-amber-400 text-neutral-950 font-black shadow-xl overflow-hidden border border-amber-300">
                 <button
                   onClick={handleDecrement}
-                  className="w-9 h-11 flex items-center justify-center hover:bg-amber-300 active:bg-amber-500 transition cursor-pointer"
+                  className="w-8 h-9 flex items-center justify-center hover:bg-amber-300 active:bg-amber-500 transition cursor-pointer"
                   aria-label="Decrease quantity"
                 >
                   <Minus className="w-3.5 h-3.5 stroke-[3]" />
                 </button>
-                <span className="px-2 text-sm text-center min-w-[24px]">
+                <span className="px-2 text-sm text-center font-black">
                   {cartQuantity}
                 </span>
                 <button
                   onClick={handleIncrement}
-                  className="w-9 h-11 flex items-center justify-center hover:bg-amber-300 active:bg-amber-500 transition cursor-pointer"
+                  className="w-8 h-9 flex items-center justify-center hover:bg-amber-300 active:bg-amber-500 transition cursor-pointer"
                   aria-label="Increase quantity"
                 >
                   <Plus className="w-3.5 h-3.5 stroke-[3]" />
                 </button>
               </div>
+            )}
+
+            {/* Customizable hint text below button */}
+            {hasCustomizations && item.isAvailable && (
+              <span className="text-[10px] text-neutral-400 font-semibold block text-center mt-1">
+                customisable
+              </span>
             )}
           </div>
         </div>

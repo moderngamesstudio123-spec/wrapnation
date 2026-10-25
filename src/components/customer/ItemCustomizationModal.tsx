@@ -12,6 +12,7 @@ export interface ModalMenuItem {
   description?: string | null;
   basePrice: number;
   isVeg: boolean;
+  imageUrl?: string | null;
   variants: Array<{
     id: string;
     name: string;
@@ -85,6 +86,25 @@ export default function ItemCustomizationModal({
         role="dialog"
         aria-modal="true"
       >
+        {/* Optional Food Hero Image */}
+        {item.imageUrl ? (
+          <div className="relative w-full h-44 sm:h-48 bg-neutral-950 overflow-hidden shrink-0">
+            <img
+              src={item.imageUrl}
+              alt={item.name}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-transparent to-black/30" />
+            <button
+              onClick={onClose}
+              className="absolute top-3 right-3 p-1.5 text-white bg-black/60 hover:bg-black/80 rounded-full backdrop-blur-md transition cursor-pointer"
+              aria-label="Close modal"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        ) : null}
+
         {/* Header */}
         <div className="p-4 border-b border-neutral-800 flex items-start justify-between bg-neutral-950/60">
           <div className="flex items-center gap-2">
@@ -96,13 +116,15 @@ export default function ItemCustomizationModal({
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-neutral-400 hover:text-white rounded-full bg-neutral-800 hover:bg-neutral-700 transition"
-            aria-label="Close modal"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          {!item.imageUrl && (
+            <button
+              onClick={onClose}
+              className="p-2 text-neutral-400 hover:text-white rounded-full bg-neutral-800 hover:bg-neutral-700 transition"
+              aria-label="Close modal"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         {/* Scrollable Body */}

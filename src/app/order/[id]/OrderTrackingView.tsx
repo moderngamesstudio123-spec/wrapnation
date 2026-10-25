@@ -17,6 +17,7 @@ import {
   Loader2,
   Utensils,
   ShoppingBag,
+  MessageSquare,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -355,6 +356,20 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
                   <p className="text-xs text-neutral-400">
                     Use PhonePe, Google Pay, Paytm, or any UPI app
                   </p>
+                  <div className="flex items-center justify-center gap-2 flex-wrap pt-1.5">
+                    <span className="px-2.5 py-1 rounded-lg bg-[#5f259f]/20 border border-[#5f259f]/40 text-[#a855f7] font-black text-[11px] tracking-wide">
+                      PhonePe
+                    </span>
+                    <span className="px-2.5 py-1 rounded-lg bg-blue-500/20 border border-blue-500/40 text-blue-400 font-black text-[11px] tracking-wide">
+                      Google Pay
+                    </span>
+                    <span className="px-2.5 py-1 rounded-lg bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 font-black text-[11px] tracking-wide">
+                      Paytm
+                    </span>
+                    <span className="px-2.5 py-1 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-400 font-black text-[11px] tracking-wide">
+                      BHIM UPI
+                    </span>
+                  </div>
                 </div>
 
                 {/* Amount to Pay */}
@@ -514,6 +529,29 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
                 {order.paymentMethod} • {order.paymentStatus}
               </span>
             </div>
+          </div>
+
+          {/* Action Buttons: WhatsApp Slip & Print */}
+          <div className="pt-2 flex flex-col sm:flex-row gap-2 border-t border-neutral-800">
+            <a
+              href={`https://wa.me/${(shop?.phone || '919876543210').replace(/\D/g, '')}?text=${encodeURIComponent(
+                `*Wrap Nation Order Receipt*\nOrder Token: ${orderTokenLabel}\nType: ${order.type}\nTotal: ${order.totalFormatted}\nPayment: ${order.paymentMethod} (${order.paymentStatus})\n\nItems:\n${order.orderItems.map((i) => `• ${i.itemName} x${i.quantity} (${i.subtotalFormatted})`).join('\n')}\n\nTrack order: ${typeof window !== 'undefined' ? window.location.href : ''}`
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-1.5 text-center"
+            >
+              <MessageSquare className="w-3.5 h-3.5 fill-white" />
+              <span>Share Slip on WhatsApp</span>
+            </a>
+
+            <button
+              onClick={() => window.print()}
+              className="py-2.5 px-4 rounded-xl bg-neutral-800 hover:bg-neutral-700 active:bg-neutral-900 border border-neutral-700 text-neutral-200 font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <Printer className="w-3.5 h-3.5 text-amber-400" />
+              <span>Print 80mm Slip</span>
+            </button>
           </div>
         </div>
 
