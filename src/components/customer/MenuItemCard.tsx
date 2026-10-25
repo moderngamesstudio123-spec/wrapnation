@@ -54,8 +54,8 @@ export default function MenuItemCard({ item }: MenuItemCardProps) {
       <div
         className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-300 relative flex items-start justify-between gap-4 ${
           item.isAvailable
-            ? 'bg-neutral-900/90 border-neutral-800/80 hover:border-neutral-700 shadow-md hover:shadow-xl'
-            : 'bg-neutral-950/60 border-neutral-900 opacity-60'
+            ? 'bg-white border-neutral-200/80 hover:border-neutral-300 shadow-sm hover:shadow-md'
+            : 'bg-neutral-100/70 border-neutral-200 opacity-60'
         }`}
       >
         {/* Left Column: Details */}
@@ -63,32 +63,32 @@ export default function MenuItemCard({ item }: MenuItemCardProps) {
           {/* Veg Badge & Rating */}
           <div className="flex items-center gap-2">
             <VegBadge isVeg={item.isVeg} />
-            <span className="text-[11px] font-bold text-amber-400 flex items-center gap-0.5">
-              <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+            <span className="text-[11px] font-bold text-amber-600 flex items-center gap-0.5">
+              <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
               <span>4.8</span>
             </span>
             {hasCustomizations && (
-              <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-neutral-800/90 text-neutral-300 font-bold border border-neutral-700/60">
+              <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-neutral-100 text-neutral-600 font-bold border border-neutral-200">
                 Customizable
               </span>
             )}
           </div>
 
           {/* Title */}
-          <h3 className="font-extrabold text-base sm:text-lg text-white leading-snug">
+          <h3 className="font-extrabold text-base sm:text-lg text-neutral-900 leading-snug">
             {item.name}
           </h3>
 
           {/* Price */}
           <div className="flex items-center gap-2">
-            <span className="text-white font-extrabold text-base sm:text-lg">
+            <span className="text-neutral-900 font-extrabold text-base sm:text-lg">
               {formatPaise(item.basePrice)}
             </span>
           </div>
 
           {/* Description */}
           {item.description && (
-            <p className="text-xs text-neutral-400 line-clamp-2 leading-relaxed pt-0.5">
+            <p className="text-xs text-neutral-600 line-clamp-2 leading-relaxed pt-0.5 font-normal">
               {item.description}
             </p>
           )}
@@ -97,7 +97,7 @@ export default function MenuItemCard({ item }: MenuItemCardProps) {
         {/* Right Column: Swiggy-Style Food Image & ADD Button */}
         <div className="relative shrink-0 flex flex-col items-center">
           {/* Image Box */}
-          <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-2xl overflow-hidden relative border border-neutral-800/80 bg-neutral-950 shadow-lg">
+          <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-2xl overflow-hidden relative border border-neutral-200/90 bg-neutral-100 shadow-sm">
             {item.imageUrl ? (
               <img
                 src={item.imageUrl}
@@ -108,14 +108,14 @@ export default function MenuItemCard({ item }: MenuItemCardProps) {
                 loading="lazy"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center bg-neutral-900 text-neutral-600 text-xs font-bold">
+              <div className="w-full h-full flex items-center justify-center bg-neutral-100 text-neutral-400 text-xs font-bold">
                 Wrap Nation
               </div>
             )}
 
             {!item.isAvailable && (
-              <div className="absolute inset-0 bg-black/70 flex items-center justify-center p-1 text-center">
-                <span className="text-[11px] font-black text-rose-400 uppercase tracking-wider">
+              <div className="absolute inset-0 bg-neutral-900/70 flex items-center justify-center p-1 text-center">
+                <span className="text-[11px] font-black text-rose-300 uppercase tracking-wider">
                   Out of Stock
                 </span>
               </div>
@@ -127,20 +127,20 @@ export default function MenuItemCard({ item }: MenuItemCardProps) {
             {!item.isAvailable ? (
               <button
                 disabled
-                className="py-1.5 px-4 text-[11px] font-bold rounded-xl bg-neutral-800 text-neutral-500 cursor-not-allowed uppercase"
+                className="py-1.5 px-4 text-[11px] font-bold rounded-xl bg-neutral-200 text-neutral-500 cursor-not-allowed uppercase"
               >
                 Sold Out
               </button>
             ) : cartQuantity === 0 ? (
               <button
                 onClick={handleAddClick}
-                className="min-h-[38px] min-w-[96px] py-1.5 px-5 text-xs font-black rounded-xl bg-white hover:bg-amber-400 active:bg-amber-300 text-neutral-950 uppercase tracking-wider shadow-xl transition-all duration-200 cursor-pointer flex items-center justify-center gap-1 border border-neutral-200 active:scale-95"
+                className="min-h-[38px] min-w-[96px] py-1.5 px-5 text-xs font-black rounded-xl bg-white hover:bg-neutral-50 active:bg-neutral-100 text-emerald-600 uppercase tracking-wider shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer flex items-center justify-center gap-1 border border-neutral-200 active:scale-95"
               >
                 <span>ADD</span>
                 <Plus className="w-3.5 h-3.5 stroke-[3] text-emerald-600" />
               </button>
             ) : (
-              <div className="min-h-[38px] min-w-[96px] flex items-center justify-between rounded-xl bg-amber-400 text-neutral-950 font-black shadow-xl overflow-hidden border border-amber-300">
+              <div className="min-h-[38px] min-w-[96px] flex items-center justify-between rounded-xl bg-amber-400 text-neutral-950 font-black shadow-md overflow-hidden border border-amber-500">
                 <button
                   onClick={handleDecrement}
                   className="w-8 h-9 flex items-center justify-center hover:bg-amber-300 active:bg-amber-500 transition cursor-pointer"
@@ -163,7 +163,7 @@ export default function MenuItemCard({ item }: MenuItemCardProps) {
 
             {/* Customizable hint text below button */}
             {hasCustomizations && item.isAvailable && (
-              <span className="text-[10px] text-neutral-400 font-semibold block text-center mt-1">
+              <span className="text-[10px] text-neutral-500 font-semibold block text-center mt-1">
                 customisable
               </span>
             )}

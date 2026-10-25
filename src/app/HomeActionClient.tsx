@@ -38,9 +38,9 @@ export default function HomeActionClient({ tables, shopPhone }: HomeActionClient
         {/* 2. Dine-In Table Picker */}
         <button
           onClick={() => setIsTableModalOpen(true)}
-          className="w-full py-3.5 px-6 rounded-2xl bg-neutral-900 hover:bg-neutral-800 active:bg-neutral-950 border border-neutral-800 hover:border-amber-400/50 text-white font-bold text-sm tracking-wide transition flex items-center justify-center gap-2 cursor-pointer shadow-lg"
+          className="w-full py-3.5 px-6 rounded-2xl bg-white hover:bg-neutral-50 active:bg-neutral-100 border border-neutral-300 hover:border-amber-400 text-neutral-900 font-bold text-sm tracking-wide transition flex items-center justify-center gap-2 cursor-pointer shadow-sm"
         >
-          <UtensilsCrossed className="w-4 h-4 text-amber-400" />
+          <UtensilsCrossed className="w-4 h-4 text-amber-500" />
           <span>Dine-In (Select Table #)</span>
         </button>
 
@@ -49,9 +49,9 @@ export default function HomeActionClient({ tables, shopPhone }: HomeActionClient
           href={whatsappUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="w-full py-3 px-6 rounded-2xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-400 font-bold text-xs tracking-wide transition flex items-center justify-center gap-2 shadow-sm"
+          className="w-full py-3 px-6 rounded-2xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-800 font-bold text-xs tracking-wide transition flex items-center justify-center gap-2 shadow-xs"
         >
-          <MessageSquare className="w-4 h-4 fill-emerald-400" />
+          <MessageSquare className="w-4 h-4 fill-emerald-600 text-emerald-600" />
           <span>Order / Inquire on WhatsApp</span>
         </a>
       </div>

@@ -154,10 +154,10 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-neutral-950 text-white flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#F8F9FA] text-neutral-900 flex items-center justify-center p-4">
         <div className="text-center space-y-3">
-          <Loader2 className="w-8 h-8 animate-spin text-amber-400 mx-auto" />
-          <p className="text-sm text-neutral-400">Loading order status...</p>
+          <Loader2 className="w-8 h-8 animate-spin text-amber-500 mx-auto" />
+          <p className="text-sm text-neutral-500 font-medium">Loading order status...</p>
         </div>
       </div>
     );
@@ -165,13 +165,13 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
 
   if (error || !order) {
     return (
-      <div className="min-h-screen bg-neutral-950 text-white flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#F8F9FA] text-neutral-900 flex items-center justify-center p-4">
         <div className="text-center space-y-4 max-w-sm">
-          <h2 className="text-xl font-bold text-rose-400">Unable to find order</h2>
-          <p className="text-sm text-neutral-400">{error || 'Please check your order link.'}</p>
+          <h2 className="text-xl font-bold text-rose-600">Unable to find order</h2>
+          <p className="text-sm text-neutral-600">{error || 'Please check your order link.'}</p>
           <Link
             href="/menu"
-            className="inline-flex py-2.5 px-6 rounded-xl bg-amber-400 text-neutral-950 font-bold text-sm"
+            className="inline-flex py-2.5 px-6 rounded-xl bg-amber-400 hover:bg-amber-300 text-neutral-950 font-bold text-sm shadow-sm transition"
           >
             Back to Menu
           </Link>
@@ -192,24 +192,24 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
       : `#${order.orderNumber}`;
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 pb-20">
+    <div className="min-h-screen bg-[#F8F9FA] text-neutral-900 pb-20">
       {/* Top Header */}
-      <header className="bg-neutral-900 border-b border-neutral-800 p-4">
+      <header className="bg-white border-b border-neutral-200/80 p-4 sticky top-0 z-30 shadow-xs">
         <div className="max-w-xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Link
               href="/menu"
-              className="text-xs font-bold text-neutral-400 hover:text-white"
+              className="text-xs font-bold text-neutral-500 hover:text-neutral-900 transition"
             >
               ← Menu
             </Link>
-            <span className="text-neutral-600">/</span>
-            <span className="text-xs font-bold text-amber-400">Order Tracking</span>
+            <span className="text-neutral-300">/</span>
+            <span className="text-xs font-bold text-amber-600">Order Tracking</span>
           </div>
 
           <button
             onClick={() => window.print()}
-            className="flex items-center gap-1.5 py-1.5 px-3 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-xs font-semibold text-neutral-300 transition"
+            className="flex items-center gap-1.5 py-1.5 px-3 rounded-lg bg-neutral-100 hover:bg-neutral-200 border border-neutral-200 text-xs font-semibold text-neutral-700 transition cursor-pointer"
           >
             <Printer className="w-3.5 h-3.5" />
             <span>Print Bill</span>
@@ -219,26 +219,26 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
 
       <main className="max-w-xl mx-auto p-4 space-y-6">
         {/* 1. Big Order Number Token Card */}
-        <div className="p-6 rounded-3xl bg-gradient-to-b from-neutral-900 to-neutral-950 border border-neutral-800 text-center space-y-3 shadow-xl">
-          <div className="inline-flex items-center gap-2 py-1 px-3 rounded-full bg-neutral-800 text-neutral-300 text-xs font-bold">
+        <div className="p-6 rounded-3xl bg-white border border-neutral-200/80 text-center space-y-3 shadow-sm">
+          <div className="inline-flex items-center gap-2 py-1 px-3 rounded-full bg-neutral-100 text-neutral-700 text-xs font-bold">
             {order.type === 'DINE_IN' ? (
               <>
-                <Utensils className="w-3.5 h-3.5 text-amber-400" />
+                <Utensils className="w-3.5 h-3.5 text-amber-600" />
                 <span>Dine-in: Table #{order.tableNumber}</span>
               </>
             ) : (
               <>
-                <ShoppingBag className="w-3.5 h-3.5 text-amber-400" />
+                <ShoppingBag className="w-3.5 h-3.5 text-amber-600" />
                 <span>Takeaway Counter Order</span>
               </>
             )}
           </div>
 
           <div>
-            <span className="text-xs text-neutral-400 uppercase tracking-widest block font-medium">
+            <span className="text-xs text-neutral-500 uppercase tracking-widest block font-medium">
               Your Order Token
             </span>
-            <div className="text-4xl sm:text-5xl font-black text-amber-400 tracking-tight mt-1">
+            <div className="text-4xl sm:text-5xl font-black text-amber-500 tracking-tight mt-1">
               {orderTokenLabel}
             </div>
           </div>
@@ -246,31 +246,31 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
           {/* Status Badge */}
           <div>
             {isAwaitingPayment && (
-              <span className="inline-flex items-center gap-1.5 py-1.5 px-4 rounded-full bg-amber-400/10 border border-amber-400/40 text-amber-400 text-xs font-black uppercase tracking-wider animate-pulse">
-                <Clock className="w-4 h-4" />
+              <span className="inline-flex items-center gap-1.5 py-1.5 px-4 rounded-full bg-amber-50 border border-amber-300 text-amber-800 text-xs font-black uppercase tracking-wider animate-pulse">
+                <Clock className="w-4 h-4 text-amber-600" />
                 <span>Awaiting Payment Confirmation</span>
               </span>
             )}
             {isPreparing && (
-              <span className="inline-flex items-center gap-1.5 py-1.5 px-4 rounded-full bg-emerald-950/80 border border-emerald-500 text-emerald-400 text-xs font-black uppercase tracking-wider">
-                <ChefHat className="w-4 h-4" />
+              <span className="inline-flex items-center gap-1.5 py-1.5 px-4 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-black uppercase tracking-wider">
+                <ChefHat className="w-4 h-4 text-emerald-600" />
                 <span>Preparing in Kitchen</span>
               </span>
             )}
             {isReady && (
-              <span className="inline-flex items-center gap-1.5 py-1.5 px-4 rounded-full bg-amber-400 text-neutral-950 text-xs font-black uppercase tracking-wider animate-bounce">
+              <span className="inline-flex items-center gap-1.5 py-1.5 px-4 rounded-full bg-amber-400 text-neutral-950 text-xs font-black uppercase tracking-wider shadow-sm animate-bounce">
                 <Bell className="w-4 h-4" />
                 <span>Order Ready! Please Collect</span>
               </span>
             )}
             {isCompleted && (
-              <span className="inline-flex items-center gap-1.5 py-1.5 px-4 rounded-full bg-neutral-800 text-neutral-300 text-xs font-black uppercase tracking-wider">
-                <CheckCheck className="w-4 h-4 text-emerald-400" />
+              <span className="inline-flex items-center gap-1.5 py-1.5 px-4 rounded-full bg-neutral-100 border border-neutral-200 text-neutral-700 text-xs font-black uppercase tracking-wider">
+                <CheckCheck className="w-4 h-4 text-emerald-600" />
                 <span>Order Completed</span>
               </span>
             )}
             {isCancelled && (
-              <span className="inline-flex items-center gap-1.5 py-1.5 px-4 rounded-full bg-rose-950 border border-rose-700 text-rose-400 text-xs font-black uppercase tracking-wider">
+              <span className="inline-flex items-center gap-1.5 py-1.5 px-4 rounded-full bg-rose-50 border border-rose-300 text-rose-700 text-xs font-black uppercase tracking-wider">
                 <span>Order {order.status}</span>
               </span>
             )}
@@ -278,18 +278,18 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
         </div>
 
         {/* 2. Step Progress Bar */}
-        <div className="p-4 rounded-2xl bg-neutral-900 border border-neutral-800">
+        <div className="p-4 rounded-2xl bg-white border border-neutral-200/80 shadow-xs">
           <div className="grid grid-cols-4 gap-2 text-center">
             {/* Step 1: Received */}
             <div className="space-y-1.5">
               <div
                 className={`w-7 h-7 mx-auto rounded-full flex items-center justify-center text-xs font-bold ${
-                  order ? 'bg-amber-400 text-neutral-950' : 'bg-neutral-800 text-neutral-500'
+                  order ? 'bg-amber-400 text-neutral-950' : 'bg-neutral-100 text-neutral-400'
                 }`}
               >
                 1
               </div>
-              <span className="text-[11px] font-bold block text-neutral-300">
+              <span className="text-[11px] font-bold block text-neutral-600">
                 Received
               </span>
             </div>
@@ -301,13 +301,13 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
                   !isAwaitingPayment && !isCancelled
                     ? 'bg-amber-400 text-neutral-950'
                     : isAwaitingPayment
-                    ? 'border-2 border-amber-400 text-amber-400 animate-pulse'
-                    : 'bg-neutral-800 text-neutral-500'
+                    ? 'border-2 border-amber-500 text-amber-600 animate-pulse'
+                    : 'bg-neutral-100 text-neutral-400'
                 }`}
               >
                 2
               </div>
-              <span className="text-[11px] font-bold block text-neutral-300">
+              <span className="text-[11px] font-bold block text-neutral-600">
                 Payment
               </span>
             </div>
@@ -318,12 +318,12 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
                 className={`w-7 h-7 mx-auto rounded-full flex items-center justify-center text-xs font-bold ${
                   isPreparing || isReady || isCompleted
                     ? 'bg-amber-400 text-neutral-950'
-                    : 'bg-neutral-800 text-neutral-500'
+                    : 'bg-neutral-100 text-neutral-400'
                 }`}
               >
                 3
               </div>
-              <span className="text-[11px] font-bold block text-neutral-300">
+              <span className="text-[11px] font-bold block text-neutral-600">
                 Kitchen
               </span>
             </div>
@@ -333,13 +333,13 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
               <div
                 className={`w-7 h-7 mx-auto rounded-full flex items-center justify-center text-xs font-bold ${
                   isReady || isCompleted
-                    ? 'bg-emerald-400 text-neutral-950'
-                    : 'bg-neutral-800 text-neutral-500'
+                    ? 'bg-emerald-500 text-white'
+                    : 'bg-neutral-100 text-neutral-400'
                 }`}
               >
                 4
               </div>
-              <span className="text-[11px] font-bold block text-neutral-300">
+              <span className="text-[11px] font-bold block text-neutral-600">
                 Ready
               </span>
             </div>
@@ -348,40 +348,40 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
 
         {/* 3. Awaiting Payment Section (Direct UPI QR / Cash instructions) */}
         {isAwaitingPayment && (
-          <div className="p-6 rounded-3xl bg-neutral-900 border-2 border-amber-400/40 space-y-6 shadow-2xl">
+          <div className="p-6 rounded-3xl bg-white border-2 border-amber-400/60 space-y-6 shadow-md">
             {order.paymentMethod === 'UPI' && upiData ? (
               <div className="text-center space-y-5">
                 <div className="space-y-1">
-                  <h3 className="text-lg font-black text-white">Scan to Pay via UPI</h3>
-                  <p className="text-xs text-neutral-400">
+                  <h3 className="text-lg font-black text-neutral-900">Scan to Pay via UPI</h3>
+                  <p className="text-xs text-neutral-500">
                     Use PhonePe, Google Pay, Paytm, or any UPI app
                   </p>
                   <div className="flex items-center justify-center gap-2 flex-wrap pt-1.5">
-                    <span className="px-2.5 py-1 rounded-lg bg-[#5f259f]/20 border border-[#5f259f]/40 text-[#a855f7] font-black text-[11px] tracking-wide">
+                    <span className="px-2.5 py-1 rounded-lg bg-[#5f259f]/10 border border-[#5f259f]/30 text-[#5f259f] font-black text-[11px] tracking-wide">
                       PhonePe
                     </span>
-                    <span className="px-2.5 py-1 rounded-lg bg-blue-500/20 border border-blue-500/40 text-blue-400 font-black text-[11px] tracking-wide">
+                    <span className="px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 font-black text-[11px] tracking-wide">
                       Google Pay
                     </span>
-                    <span className="px-2.5 py-1 rounded-lg bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 font-black text-[11px] tracking-wide">
+                    <span className="px-2.5 py-1 rounded-lg bg-sky-50 border border-sky-200 text-sky-700 font-black text-[11px] tracking-wide">
                       Paytm
                     </span>
-                    <span className="px-2.5 py-1 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-400 font-black text-[11px] tracking-wide">
+                    <span className="px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 font-black text-[11px] tracking-wide">
                       BHIM UPI
                     </span>
                   </div>
                 </div>
 
                 {/* Amount to Pay */}
-                <div className="py-2.5 px-6 rounded-2xl bg-amber-400/10 border border-amber-400/30 inline-block">
-                  <span className="text-xs text-neutral-400 block font-medium">Exact Amount to Pay</span>
-                  <span className="text-3xl font-black text-amber-400">
+                <div className="py-2.5 px-6 rounded-2xl bg-amber-50 border border-amber-300 inline-block">
+                  <span className="text-xs text-neutral-600 block font-medium">Exact Amount to Pay</span>
+                  <span className="text-3xl font-black text-amber-600">
                     {order.totalFormatted}
                   </span>
                 </div>
 
                 {/* QR Code Container */}
-                <div className="p-4 bg-white rounded-2xl inline-block shadow-xl">
+                <div className="p-4 bg-neutral-50 border border-neutral-200/80 rounded-2xl inline-block shadow-sm">
                   {upiData.qrDataUrl && (
                     <Image
                       src={upiData.qrDataUrl}
@@ -394,16 +394,16 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
                 </div>
 
                 {/* Payee Info */}
-                <div className="text-xs text-neutral-400 space-y-0.5">
-                  <p className="text-white font-bold">{upiData.payeeName}</p>
-                  <p className="font-mono text-amber-400">{upiData.upiId}</p>
+                <div className="text-xs text-neutral-600 space-y-0.5">
+                  <p className="text-neutral-900 font-bold">{upiData.payeeName}</p>
+                  <p className="font-mono text-amber-600 font-semibold">{upiData.upiId}</p>
                 </div>
 
                 {/* Open UPI App Deep Link Button */}
                 <div>
                   <a
                     href={upiData.deepLink}
-                    className="inline-flex items-center justify-center gap-2 py-3 px-6 rounded-xl bg-amber-400 hover:bg-amber-300 active:bg-amber-500 text-neutral-950 font-black text-sm uppercase tracking-wider shadow-lg transition w-full"
+                    className="inline-flex items-center justify-center gap-2 py-3 px-6 rounded-xl bg-amber-400 hover:bg-amber-300 active:bg-amber-500 text-neutral-950 font-black text-sm uppercase tracking-wider shadow-sm transition w-full"
                   >
                     <span>Open in UPI App</span>
                     <ExternalLink className="w-4 h-4" />
@@ -411,8 +411,8 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
                 </div>
 
                 {/* Optional Customer UTR Hint Form */}
-                <div className="pt-4 border-t border-neutral-800 text-left space-y-2">
-                  <label className="text-xs font-semibold text-neutral-300 block">
+                <div className="pt-4 border-t border-neutral-200 text-left space-y-2">
+                  <label className="text-xs font-semibold text-neutral-700 block">
                     Paid? Enter last 4 digits of UPI Ref / UTR (Optional hint for staff)
                   </label>
                   <form onSubmit={handleSubmitHint} className="flex gap-2">
@@ -422,19 +422,19 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
                       placeholder="e.g. 4821"
                       value={utrHintInput}
                       onChange={(e) => setUtrHintInput(e.target.value.replace(/\D/g, ''))}
-                      className="w-32 px-3 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-white font-mono text-sm text-center focus:outline-none focus:border-amber-400"
+                      className="w-32 px-3 py-2 rounded-xl bg-neutral-50 border border-neutral-300 text-neutral-900 font-mono text-sm text-center focus:outline-none focus:border-amber-500 focus:bg-white"
                     />
                     <button
                       type="submit"
                       disabled={submittingHint || utrHintInput.length !== 4}
-                      className="py-2 px-4 rounded-xl bg-neutral-800 hover:bg-neutral-700 disabled:opacity-50 text-white font-bold text-xs transition flex items-center gap-1.5 cursor-pointer"
+                      className="py-2 px-4 rounded-xl bg-neutral-900 hover:bg-neutral-800 disabled:opacity-50 text-white font-bold text-xs transition flex items-center gap-1.5 cursor-pointer"
                     >
                       {submittingHint ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
                       <span>Save Hint</span>
                     </button>
                   </form>
                   {hintSubmitted && (
-                    <p className="text-xs text-emerald-400 font-medium flex items-center gap-1">
+                    <p className="text-xs text-emerald-600 font-medium flex items-center gap-1">
                       <CheckCircle2 className="w-3.5 h-3.5" />
                       Hint recorded for counter staff verification.
                     </p>
@@ -443,20 +443,20 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
               </div>
             ) : (
               <div className="text-center space-y-4">
-                <div className="w-12 h-12 rounded-2xl bg-amber-400/10 text-amber-400 flex items-center justify-center mx-auto">
+                <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center mx-auto">
                   <QrCode className="w-6 h-6" />
                 </div>
-                <h3 className="text-lg font-black text-white">Pay at Counter (Cash)</h3>
-                <p className="text-xs text-neutral-400 leading-relaxed max-w-sm mx-auto">
-                  Please show your order token <strong className="text-amber-400">{orderTokenLabel}</strong> and pay <strong className="text-white">{order.totalFormatted}</strong> in cash at the counter.
+                <h3 className="text-lg font-black text-neutral-900">Pay at Counter (Cash)</h3>
+                <p className="text-xs text-neutral-600 leading-relaxed max-w-sm mx-auto">
+                  Please show your order token <strong className="text-amber-600">{orderTokenLabel}</strong> and pay <strong className="text-neutral-900">{order.totalFormatted}</strong> in cash at the counter.
                 </p>
               </div>
             )}
 
             {/* Crucial Security Notice */}
-            <div className="p-3.5 rounded-xl bg-neutral-950/80 border border-neutral-800 text-xs text-neutral-400 space-y-1">
-              <div className="flex items-center gap-1.5 text-neutral-300 font-bold">
-                <ShieldCheck className="w-4 h-4 text-amber-400" />
+            <div className="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200/80 text-xs text-neutral-600 space-y-1">
+              <div className="flex items-center gap-1.5 text-neutral-900 font-bold">
+                <ShieldCheck className="w-4 h-4 text-amber-600" />
                 <span>Security Notice</span>
               </div>
               <p className="text-[11px] leading-relaxed">
@@ -467,15 +467,15 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
         )}
 
         {/* 4. Itemized Digital Receipt Card */}
-        <div className="p-5 rounded-2xl bg-neutral-900 border border-neutral-800 space-y-4 text-xs">
-          <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+        <div className="p-5 rounded-2xl bg-white border border-neutral-200/80 space-y-4 text-xs shadow-sm">
+          <div className="flex items-center justify-between border-b border-neutral-200 pb-3">
             <div>
-              <h4 className="font-bold text-sm text-white">{shop?.name || 'Wrap Nation'}</h4>
+              <h4 className="font-bold text-sm text-neutral-900">{shop?.name || 'Wrap Nation'}</h4>
               <p className="text-neutral-500 text-[11px]">{shop?.address}</p>
               {shop?.gstin && <p className="text-neutral-500 text-[11px]">GSTIN: {shop.gstin}</p>}
             </div>
             <div className="text-right">
-              <span className="font-bold text-white block">Token: {orderTokenLabel}</span>
+              <span className="font-bold text-neutral-900 block">Token: {orderTokenLabel}</span>
               <span className="text-neutral-500 text-[11px]">
                 {new Date(order.createdAt).toLocaleTimeString('en-IN', {
                   hour: '2-digit',
@@ -486,60 +486,60 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
           </div>
 
           {/* Items breakdown */}
-          <div className="divide-y divide-neutral-800/60">
+          <div className="divide-y divide-neutral-100">
             {order.orderItems.map((item) => (
               <div key={item.id} className="py-2 flex items-start justify-between">
                 <div>
-                  <span className="font-bold text-white">
+                  <span className="font-bold text-neutral-900">
                     {item.itemName} × {item.quantity}
                   </span>
                   {item.variantName && (
-                    <div className="text-[11px] text-amber-400/90">• {item.variantName}</div>
+                    <div className="text-[11px] text-amber-600 font-medium">• {item.variantName}</div>
                   )}
                   {item.addOns.length > 0 && (
-                    <div className="text-[11px] text-neutral-400">
+                    <div className="text-[11px] text-neutral-500">
                       {item.addOns.map((a) => `+ ${a.name}`).join(', ')}
                     </div>
                   )}
                 </div>
-                <span className="font-bold text-neutral-200">{item.subtotalFormatted}</span>
+                <span className="font-bold text-neutral-900">{item.subtotalFormatted}</span>
               </div>
             ))}
           </div>
 
           {/* Subtotal, Tax, Total */}
-          <div className="border-t border-neutral-800 pt-3 space-y-1">
-            <div className="flex justify-between text-neutral-400">
+          <div className="border-t border-neutral-200 pt-3 space-y-1">
+            <div className="flex justify-between text-neutral-600">
               <span>Subtotal</span>
               <span>{order.subtotalFormatted}</span>
             </div>
             {order.tax > 0 && (
-              <div className="flex justify-between text-neutral-400">
+              <div className="flex justify-between text-neutral-600">
                 <span>GST Tax</span>
                 <span>{order.taxFormatted}</span>
               </div>
             )}
-            <div className="flex justify-between font-black text-sm text-white pt-1 border-t border-neutral-800">
+            <div className="flex justify-between font-black text-sm text-neutral-900 pt-1 border-t border-neutral-200">
               <span>Total Amount</span>
-              <span className="text-amber-400">{order.totalFormatted}</span>
+              <span className="text-amber-600">{order.totalFormatted}</span>
             </div>
             <div className="flex justify-between text-neutral-500 text-[11px] pt-1">
               <span>Payment Mode</span>
-              <span className="uppercase font-semibold text-neutral-300">
+              <span className="uppercase font-semibold text-neutral-700">
                 {order.paymentMethod} • {order.paymentStatus}
               </span>
             </div>
           </div>
 
           {/* Action Buttons: WhatsApp Slip & Print */}
-          <div className="pt-2 flex flex-col sm:flex-row gap-2 border-t border-neutral-800">
+          <div className="pt-2 flex flex-col sm:flex-row gap-2 border-t border-neutral-200">
             <a
               href={`https://wa.me/${(shop?.phone || '919876543210').replace(/\D/g, '')}?text=${encodeURIComponent(
                 `*Wrap Nation Order Receipt*\nOrder Token: ${orderTokenLabel}\nType: ${order.type}\nTotal: ${order.totalFormatted}\nPayment: ${order.paymentMethod} (${order.paymentStatus})\n\nItems:\n${order.orderItems.map((i) => `• ${i.itemName} x${i.quantity} (${i.subtotalFormatted})`).join('\n')}\n\nTrack order: ${typeof window !== 'undefined' ? window.location.href : ''}`
               )}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-1.5 text-center"
+              className="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold text-xs shadow-sm transition flex items-center justify-center gap-1.5 text-center"
             >
               <MessageSquare className="w-3.5 h-3.5 fill-white" />
               <span>Share Slip on WhatsApp</span>
@@ -547,9 +547,9 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
 
             <button
               onClick={() => window.print()}
-              className="py-2.5 px-4 rounded-xl bg-neutral-800 hover:bg-neutral-700 active:bg-neutral-900 border border-neutral-700 text-neutral-200 font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer"
+              className="py-2.5 px-4 rounded-xl bg-neutral-100 hover:bg-neutral-200 active:bg-neutral-300 border border-neutral-200 text-neutral-800 font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer"
             >
-              <Printer className="w-3.5 h-3.5 text-amber-400" />
+              <Printer className="w-3.5 h-3.5 text-amber-600" />
               <span>Print 80mm Slip</span>
             </button>
           </div>

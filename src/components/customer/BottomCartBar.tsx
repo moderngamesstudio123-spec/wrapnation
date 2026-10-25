@@ -12,11 +12,11 @@ export default function BottomCartBar() {
   if (totalItemsCount === 0) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 p-3 sm:p-4 bg-gradient-to-t from-black via-black/95 to-transparent pointer-events-none">
+    <div className="fixed bottom-0 left-0 right-0 z-40 p-3 sm:p-4 bg-gradient-to-t from-[#F8F9FA] via-[#F8F9FA]/95 to-transparent pointer-events-none">
       <div className="max-w-md mx-auto pointer-events-auto">
         <Link
           href="/cart"
-          className="flex items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-amber-400 hover:bg-amber-300 active:bg-amber-500 text-neutral-950 shadow-2xl transition duration-200 group"
+          className="flex items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-amber-400 hover:bg-amber-300 active:bg-amber-500 text-neutral-950 shadow-xl border border-amber-300 transition duration-200 group"
         >
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-neutral-950/15 flex items-center justify-center">

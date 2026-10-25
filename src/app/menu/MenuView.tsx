@@ -117,18 +117,18 @@ export default function MenuView({
   };
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 pb-28">
+    <div className="min-h-screen bg-[#F8F9FA] text-neutral-900 pb-28">
       {/* 1. Header Bar */}
-      <header className="sticky top-0 z-30 bg-neutral-950/90 backdrop-blur-md border-b border-neutral-800/80">
+      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-neutral-200/90 shadow-xs">
         <div className="max-w-2xl mx-auto px-4 py-3 space-y-3">
           {/* Top row: Brand & Dine-in/Takeaway badge */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-neutral-900 flex items-center gap-2">
                 <span>{shopName}</span>
-                <span className="text-amber-400">⚡</span>
+                <span className="text-amber-500">⚡</span>
               </h1>
-              <p className="text-xs text-neutral-400 font-medium">
+              <p className="text-xs text-neutral-500 font-medium">
                 Fast, Fresh & Crisp Wraps
               </p>
             </div>
@@ -136,13 +136,13 @@ export default function MenuView({
             {/* Table / Takeaway Pill */}
             <div>
               {isDineIn ? (
-                <div className="flex items-center gap-1.5 py-1 px-3 rounded-full bg-amber-400/10 border border-amber-400/30 text-amber-400 text-xs font-bold shadow-sm">
-                  <Utensils className="w-3.5 h-3.5" />
+                <div className="flex items-center gap-1.5 py-1 px-3 rounded-full bg-amber-50 border border-amber-300 text-amber-900 text-xs font-bold shadow-xs">
+                  <Utensils className="w-3.5 h-3.5 text-amber-600" />
                   <span>Dine-in: Table #{tableNumber}</span>
                 </div>
               ) : (
-                <div className="flex items-center gap-1.5 py-1 px-3 rounded-full bg-neutral-800 border border-neutral-700 text-neutral-300 text-xs font-bold">
-                  <ShoppingBag className="w-3.5 h-3.5 text-amber-400" />
+                <div className="flex items-center gap-1.5 py-1 px-3 rounded-full bg-neutral-100 border border-neutral-200 text-neutral-800 text-xs font-bold">
+                  <ShoppingBag className="w-3.5 h-3.5 text-amber-500" />
                   <span>Takeaway</span>
                 </div>
               )}
@@ -152,18 +152,18 @@ export default function MenuView({
           {/* Search Input & Veg Filter Row */}
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
               <input
                 type="text"
                 placeholder="Search wraps, burgers, snacks..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-8 py-2 rounded-xl bg-neutral-900 border border-neutral-800 text-white placeholder-neutral-500 text-xs sm:text-sm focus:outline-none focus:border-amber-400 transition"
+                className="w-full pl-9 pr-8 py-2 rounded-xl bg-neutral-100 border border-neutral-200 text-neutral-900 placeholder-neutral-400 text-xs sm:text-sm focus:outline-none focus:border-amber-400 focus:bg-white transition"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white p-0.5"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-700 p-0.5"
                   aria-label="Clear search"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -176,8 +176,8 @@ export default function MenuView({
               onClick={() => setVegOnly(!vegOnly)}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border transition cursor-pointer shrink-0 ${
                 vegOnly
-                  ? 'bg-emerald-950/60 border-emerald-500 text-emerald-400'
-                  : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:text-white'
+                  ? 'bg-emerald-50 border-emerald-500 text-emerald-700'
+                  : 'bg-white border-neutral-200 text-neutral-600 hover:text-neutral-900'
               }`}
             >
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
@@ -190,7 +190,7 @@ export default function MenuView({
         <div className="max-w-2xl mx-auto px-4">
           <nav
             aria-label="Menu categories"
-            className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2 border-t border-neutral-900"
+            className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2 border-t border-neutral-100"
           >
             {categories.map((cat) => {
               const isActive = activeCategorySlug === cat.slug;
@@ -200,8 +200,8 @@ export default function MenuView({
                   onClick={() => scrollToCategory(cat.slug)}
                   className={`py-1.5 px-4 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-200 cursor-pointer shrink-0 flex items-center gap-1.5 ${
                     isActive
-                      ? 'bg-amber-400 text-neutral-950 shadow-md font-black'
-                      : 'bg-neutral-900 text-neutral-400 hover:text-white hover:bg-neutral-800'
+                      ? 'bg-amber-400 text-neutral-950 shadow-sm font-black border border-amber-400'
+                      : 'bg-white text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 border border-neutral-200'
                   }`}
                 >
                   <span>{categoryIcons[cat.slug] || '🍽️'}</span>
@@ -217,7 +217,7 @@ export default function MenuView({
       <main className="max-w-2xl mx-auto px-4 pt-4 space-y-8">
         {filteredCategories.length === 0 ? (
           <div className="text-center py-16 space-y-3">
-            <p className="text-neutral-400 text-sm">
+            <p className="text-neutral-500 text-sm">
               No menu items match your search.
             </p>
             <button
@@ -225,7 +225,7 @@ export default function MenuView({
                 setSearchQuery('');
                 setVegOnly(false);
               }}
-              className="px-4 py-2 text-xs font-bold rounded-xl bg-neutral-800 text-amber-400 hover:bg-neutral-700 transition"
+              className="px-4 py-2 text-xs font-bold rounded-xl bg-neutral-200 text-neutral-800 hover:bg-neutral-300 transition"
             >
               Reset Filters
             </button>
@@ -240,8 +240,8 @@ export default function MenuView({
               }}
               className="space-y-3 scroll-mt-36"
             >
-              <div className="flex items-center justify-between border-b border-neutral-800/80 pb-2">
-                <h2 className="font-black text-lg text-white uppercase tracking-wider flex items-center gap-2">
+              <div className="flex items-center justify-between border-b border-neutral-200/80 pb-2">
+                <h2 className="font-black text-lg text-neutral-900 uppercase tracking-wider flex items-center gap-2">
                   <span>{categoryIcons[cat.slug] || '🍽️'}</span>
                   <span>{cat.name}</span>
                 </h2>
@@ -265,7 +265,7 @@ export default function MenuView({
         href={`https://wa.me/${(shopPhone || '919876543210').replace(/\D/g, '')}?text=${encodeURIComponent('Hi Wrap Nation! I need help with my menu order.')}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-24 right-4 z-40 py-2.5 px-4 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-2xl flex items-center gap-2 transition-all hover:scale-105 active:scale-95 border border-emerald-400/40"
+        className="fixed bottom-24 right-4 z-40 py-2.5 px-4 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-xl flex items-center gap-2 transition-all hover:scale-105 active:scale-95 border border-emerald-500"
         aria-label="Chat with Wrap Nation on WhatsApp"
       >
         <span className="text-base">💬</span>

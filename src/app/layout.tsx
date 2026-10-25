@@ -24,8 +24,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="h-full antialiased dark">
-      <body className="min-h-full flex flex-col bg-neutral-950 text-neutral-100">
+    <html lang="en" className="h-full antialiased">
+      <body className="min-h-full flex flex-col bg-[#F8F9FA] text-neutral-900">
         <CartProvider>{children}</CartProvider>
       </body>
     </html>
