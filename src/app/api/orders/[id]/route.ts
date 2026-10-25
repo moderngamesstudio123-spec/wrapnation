@@ -29,14 +29,17 @@ export async function GET(
   }
 
   if (!order) {
-    const cookieVal = req.cookies.get(`wn_order_${id}`)?.value || req.cookies.get('wn_last_order')?.value;
-    if (cookieVal) {
+    const rawCookie = req.cookies.get(`wn_order_${id}`)?.value || req.cookies.get('wn_last_order')?.value;
+    if (rawCookie) {
       try {
-        const parsed = JSON.parse(cookieVal);
+        const decoded = rawCookie.startsWith('%') ? decodeURIComponent(rawCookie) : rawCookie;
+        const parsed = JSON.parse(decoded);
         if (parsed && (parsed.id === id || !id)) {
           order = parsed;
         }
-      } catch {}
+      } catch (cookieErr) {
+        console.warn('Failed to parse order cookie:', cookieErr);
+      }
     }
   }
 
@@ -106,24 +109,26 @@ export async function GET(
       completedAt: order.completedAt,
       createdAt: order.createdAt,
       orderItems: (order.orderItems || []).map((item: any) => {
-        let addOns = [];
-        try {
-          addOns = JSON.parse(item.addOnsJson || '[]');
-        } catch {}
+        let addOns = Array.isArray(item.addOns) ? item.addOns : [];
+        if (!addOns.length && item.addOnsJson) {
+          try {
+            addOns = JSON.parse(item.addOnsJson);
+          } catch {}
+        }
         return {
           id: item.id,
           itemName: item.itemName,
-          variantName: item.variantName,
+          variantName: item.variantName || null,
           unitPrice: item.unitPrice,
           unitPriceFormatted: formatPaise(item.unitPrice),
           quantity: item.quantity,
           subtotal: item.subtotal,
           subtotalFormatted: formatPaise(item.subtotal),
           addOns,
-          notes: item.notes,
+          notes: item.notes || null,
         };
       }),
-      payment: order.payments[0] || null,
+      payment: order.payments?.[0] || null,
     },
     upiPaymentData,
     shop: {
