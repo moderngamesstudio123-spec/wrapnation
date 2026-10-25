@@ -59,6 +59,7 @@ export default function MenuView({
   initialCategories,
   shopName,
   shopPhone,
+  shopAddress,
 }: MenuViewProps) {
   const router = useRouter();
   const { isDineIn, tableNumber, addItem } = useCart();
@@ -166,9 +167,18 @@ export default function MenuView({
                 <span>{shopName}</span>
                 <span className="text-amber-500">⚡</span>
               </h1>
-              <p className="text-xs text-neutral-500 font-medium">
-                Fast, Fresh & Crisp Wraps
-              </p>
+              <div className="flex items-center gap-1.5 text-xs text-neutral-500 font-medium">
+                <span>Fresh Wraps</span>
+                <span>•</span>
+                <a
+                  href="https://share.google/K02BROH8ES5iuiEmh"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-amber-800 hover:text-amber-950 font-bold inline-flex items-center gap-0.5 bg-amber-50 hover:bg-amber-100 px-2 py-0.5 rounded-md border border-amber-200 transition"
+                >
+                  <span>Erragadda, Hyd 📍</span>
+                </a>
+              </div>
             </div>
 
             {/* Table / Takeaway Pill */}
@@ -336,6 +346,24 @@ export default function MenuView({
           ))
         )}
       </main>
+
+      {/* 5. Clean Footer with Shop Address & Google Map link */}
+      <footer className="max-w-2xl mx-auto px-4 pt-10 pb-6 text-center space-y-3 border-t border-neutral-200/80 mt-10">
+        <div className="space-y-1">
+          <p className="text-sm font-black text-neutral-900">{shopName} • Hyderabad</p>
+          <p className="text-xs text-neutral-600 font-medium max-w-md mx-auto leading-relaxed">
+            {shopAddress || '8-4, 549/48, AG Colony Rd, Erragadda, Hyderabad, Telangana 500038'}
+          </p>
+        </div>
+        <a
+          href="https://share.google/K02BROH8ES5iuiEmh"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-950 text-xs font-bold transition shadow-xs"
+        >
+          <span>📍 Open in Google Maps</span>
+        </a>
+      </footer>
 
       {/* Floating WhatsApp Help Button */}
       <a

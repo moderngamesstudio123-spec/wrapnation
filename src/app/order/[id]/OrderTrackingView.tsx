@@ -112,8 +112,8 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
           });
           setShop({
             name: 'Wrap Nation',
-            address: 'Shop 4, Food Street, Bengaluru',
-            phone: '+91 86868 78675',
+            address: '8-4, 549/48, AG Colony Rd, Erragadda, Hyderabad, Telangana 500038',
+            phone: '+91 81250 57086',
             gstin: null,
           });
           setError(null);
@@ -150,8 +150,8 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
           });
           setShop({
             name: 'Wrap Nation',
-            address: 'Shop 4, Food Street, Bengaluru',
-            phone: '+91 86868 78675',
+            address: '8-4, 549/48, AG Colony Rd, Erragadda, Hyderabad, Telangana 500038',
+            phone: '+91 81250 57086',
             gstin: null,
           });
           setError(null);
@@ -650,6 +650,16 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
               <Printer className="w-3.5 h-3.5 text-amber-600" />
               <span>Print 80mm Slip</span>
             </button>
+
+            <a
+              href="https://share.google/K02BROH8ES5iuiEmh"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="py-2.5 px-4 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 font-bold text-xs transition flex items-center justify-center gap-1.5"
+            >
+              <span>📍 View on Google Map</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
           </div>
         </div>
 
@@ -689,7 +699,7 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
                 🎉 Thank you so much! Please take 10 seconds to share your review on Google Maps.
               </p>
               <a
-                href="https://search.google.com/local/writereview?placeid=ChIJwrapnation_demo"
+                href="https://share.google/K02BROH8ES5iuiEmh"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-1.5 py-2 px-5 rounded-xl bg-amber-400 hover:bg-amber-300 text-neutral-950 font-black text-xs uppercase tracking-wider shadow-sm transition"

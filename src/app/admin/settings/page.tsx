@@ -30,6 +30,7 @@ interface SettingsData {
   upiQrUrl: string;
   printerPaperWidth: '80' | '58';
   printerEnabled: boolean;
+  googleMapsUrl?: string;
 }
 
 export default function AdminSettingsPage() {
@@ -197,6 +198,17 @@ export default function AdminSettingsPage() {
               value={settings.shopAddress}
               onChange={(e) => setSettings({ ...settings, shopAddress: e.target.value })}
               className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 border border-neutral-300 text-neutral-900 font-medium focus:outline-none focus:border-amber-400 shadow-xs"
+            />
+          </div>
+
+          <div className="sm:col-span-2 space-y-1">
+            <label className="text-neutral-700 font-bold block">Google Maps Link</label>
+            <input
+              type="text"
+              placeholder="https://share.google/..."
+              value={settings.googleMapsUrl || ''}
+              onChange={(e) => setSettings({ ...settings, googleMapsUrl: e.target.value })}
+              className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 border border-neutral-300 text-neutral-900 font-mono text-xs focus:outline-none focus:border-amber-400 shadow-xs"
             />
           </div>
 

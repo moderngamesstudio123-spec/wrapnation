@@ -124,4 +124,5 @@ export const updateShopSettingsSchema = z.object({
   unpaidOrderTimeoutMins: z.number().int().min(5).max(60),
   printerPaperWidth: z.enum(['80', '58']),
   printerEnabled: z.boolean(),
+  googleMapsUrl: z.string().trim().max(500).optional().nullable(),
 }).strict();

@@ -19,6 +19,7 @@ export interface ShopSettings {
   upiQrUrl: string;
   printerPaperWidth: '80' | '58';
   printerEnabled: boolean;
+  googleMapsUrl: string | null;
 }
 
 export async function getSettings(): Promise<ShopSettings> {
@@ -34,14 +35,14 @@ export async function getSettings(): Promise<ShopSettings> {
 
   return {
     shopName: map['shop_name'] || 'Wrap Nation',
-    shopAddress: map['shop_address'] || 'Shop 4, Food Street, Bengaluru',
-    shopPhone: map['shop_phone'] || '+91 86868 78675',
+    shopAddress: map['shop_address'] || '8-4, 549/48, AG Colony Rd, Erragadda, Hyderabad, Telangana 500038',
+    shopPhone: map['shop_phone'] || '+91 81250 57086',
     gstEnabled: map['gst_enabled'] === 'true',
     gstin: map['gstin'] || '',
     gstPercentage: parseFloat(map['gst_percentage'] || '5'),
     currency: map['currency'] || 'INR',
     openingTime: map['opening_time'] || '11:00',
-    closingTime: map['closing_time'] || '23:00',
+    closingTime: map['closing_time'] || '01:00',
     tablesCount: parseInt(map['tables_count'] || '12', 10),
     unpaidOrderTimeoutMins: parseInt(map['unpaid_order_timeout_mins'] || '15', 10),
     upiId: map['upi_id'] || 'wrapnation@okaxis',
@@ -49,6 +50,7 @@ export async function getSettings(): Promise<ShopSettings> {
     upiQrUrl: map['upi_qr_url'] || '',
     printerPaperWidth: (map['printer_paper_width'] === '58' ? '58' : '80') as '80' | '58',
     printerEnabled: map['printer_enabled'] !== 'false',
+    googleMapsUrl: map['google_maps_url'] || 'https://share.google/K02BROH8ES5iuiEmh',
   };
 }
 
@@ -102,6 +104,7 @@ export async function updateShopSettings(
     unpaid_order_timeout_mins: settings.unpaidOrderTimeoutMins !== undefined ? String(settings.unpaidOrderTimeoutMins) : undefined,
     printer_paper_width: settings.printerPaperWidth,
     printer_enabled: settings.printerEnabled !== undefined ? String(settings.printerEnabled) : undefined,
+    google_maps_url: settings.googleMapsUrl !== undefined ? (settings.googleMapsUrl ?? '') : undefined,
   };
 
   for (const [key, value] of Object.entries(keyMap)) {

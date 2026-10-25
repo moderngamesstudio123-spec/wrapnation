@@ -10,14 +10,14 @@ async function main() {
   // 1. Seed Shop Settings
   const defaultSettings: Record<string, string> = {
     shop_name: 'Wrap Nation',
-    shop_address: 'Shop 4, Ground Floor, Food Street, Indiranagar, Bengaluru, Karnataka 560038',
-    shop_phone: '+91 86868 78675',
+    shop_address: '8-4, 549/48, AG Colony Rd, Erragadda, Hyderabad, Telangana 500038',
+    shop_phone: '+91 81250 57086',
     gst_enabled: 'false',
     gstin: '',
     gst_percentage: '5',
     currency: 'INR',
     opening_time: '11:00',
-    closing_time: '23:00',
+    closing_time: '01:00',
     tables_count: '12',
     unpaid_order_timeout_mins: '15',
     upi_id: 'wrapnation@okaxis',
@@ -25,6 +25,7 @@ async function main() {
     upi_qr_url: '',
     printer_paper_width: '80',
     printer_enabled: 'true',
+    google_maps_url: 'https://share.google/K02BROH8ES5iuiEmh',
   };
 
   for (const [key, value] of Object.entries(defaultSettings)) {
