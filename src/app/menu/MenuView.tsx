@@ -1,10 +1,25 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useCart } from '@/lib/customer/cartContext';
 import MenuItemCard from '@/components/customer/MenuItemCard';
 import BottomCartBar from '@/components/customer/BottomCartBar';
-import { Search, Utensils, ShoppingBag, X } from 'lucide-react';
+import { Search, Utensils, ShoppingBag, X, Zap, ArrowRight } from 'lucide-react';
+
+interface FavoriteOrderItem {
+  menuItem: { id: string; name: string; basePrice: number; isVeg: boolean };
+  variant?: { id: string; name: string; priceDelta: number } | null;
+  addOns: Array<{ id: string; name: string; price: number }>;
+  quantity: number;
+}
+
+interface FavoriteOrder {
+  orderNumber: number;
+  summary: string;
+  items: FavoriteOrderItem[];
+  placedAt: string;
+}
 
 interface CategoryData {
   id: string;
@@ -45,15 +60,38 @@ export default function MenuView({
   shopName,
   shopPhone,
 }: MenuViewProps) {
-  const { isDineIn, tableNumber } = useCart();
+  const router = useRouter();
+  const { isDineIn, tableNumber, addItem } = useCart();
   const [categories] = useState<CategoryData[]>(initialCategories);
   const [searchQuery, setSearchQuery] = useState('');
   const [vegOnly, setVegOnly] = useState(false);
+  const [favoriteOrder, setFavoriteOrder] = useState<FavoriteOrder | null>(null);
+  const [dismissFavorite, setDismissFavorite] = useState(false);
   const [activeCategorySlug, setActiveCategorySlug] = useState<string>(
     categories[0]?.slug || ''
   );
 
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
+
+  // Feature 7: Load last favorite order from localStorage
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('wrapnation_favorite_order');
+      if (raw) {
+        setFavoriteOrder(JSON.parse(raw));
+      }
+    } catch {}
+  }, []);
+
+  const handle1ClickReorder = () => {
+    if (!favoriteOrder || !favoriteOrder.items.length) return;
+    for (const item of favoriteOrder.items) {
+      for (let q = 0; q < (item.quantity || 1); q++) {
+        addItem(item.menuItem, item.variant, item.addOns);
+      }
+    }
+    router.push('/cart');
+  };
 
   const scrollToCategory = (slug: string) => {
     setActiveCategorySlug(slug);
@@ -212,6 +250,45 @@ export default function MenuView({
           </nav>
         </div>
       </header>
+
+      {/* Feature 7: 1-Click Favorite Re-Order Banner */}
+      {favoriteOrder && !dismissFavorite && (
+        <div className="max-w-2xl mx-auto px-4 pt-3">
+          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 border border-amber-300 shadow-xs flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+              <div className="w-8 h-8 rounded-xl bg-amber-400 text-neutral-950 flex items-center justify-center shrink-0 shadow-xs font-black">
+                <Zap className="w-4 h-4 fill-neutral-950" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-[11px] font-black uppercase tracking-wider text-amber-800 flex items-center gap-1">
+                  <span>Welcome back! Order your usual?</span>
+                </div>
+                <div className="text-xs font-bold text-neutral-900 truncate">
+                  {favoriteOrder.summary}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                onClick={handle1ClickReorder}
+                className="py-1.5 px-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-neutral-950 font-black text-xs shadow-xs transition flex items-center gap-1 cursor-pointer"
+              >
+                <span>Re-Order</span>
+                <ArrowRight className="w-3 h-3 stroke-[2.5]" />
+              </button>
+              <button
+                onClick={() => setDismissFavorite(true)}
+                className="p-1 text-neutral-400 hover:text-neutral-700 rounded-lg text-xs"
+                title="Dismiss"
+                aria-label="Dismiss re-order banner"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 3. Menu Category Sections */}
       <main className="max-w-2xl mx-auto px-4 pt-4 space-y-8">

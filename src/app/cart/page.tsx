@@ -100,6 +100,24 @@ export default function CartPage() {
         throw new Error(data.error || 'Failed to place order');
       }
 
+      // Feature 7: Save last order as favorite in localStorage for 1-Click Re-Order
+      try {
+        localStorage.setItem(
+          'wrapnation_favorite_order',
+          JSON.stringify({
+            orderNumber: data.order.orderNumber,
+            summary: items.map((i) => `${i.name}${i.quantity > 1 ? ` x${i.quantity}` : ''}`).join(', '),
+            items: items.map((i) => ({
+              menuItem: { id: i.menuItemId, name: i.name, basePrice: i.basePrice, isVeg: i.isVeg },
+              variant: i.variantId ? { id: i.variantId, name: i.variantName || '', priceDelta: i.variantDelta } : null,
+              addOns: i.addOns,
+              quantity: i.quantity,
+            })),
+            placedAt: new Date().toISOString(),
+          })
+        );
+      } catch {}
+
       // Clear cart and redirect to order status tracking page
       clearCart();
       router.replace(`/order/${data.order.id}`);
@@ -188,11 +206,11 @@ export default function CartPage() {
             )}
           </div>
 
-          {!isDineIn && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+          <div className="space-y-3 pt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="text-xs text-neutral-600 font-semibold block mb-1">
-                  Customer Name *
+                  Customer Name {isDineIn ? '(Optional)' : '*'}
                 </label>
                 <input
                   type="text"
@@ -204,7 +222,7 @@ export default function CartPage() {
               </div>
               <div>
                 <label className="text-xs text-neutral-600 font-semibold block mb-1">
-                  10-Digit Mobile Number *
+                  10-Digit Mobile Number {isDineIn ? '(For WhatsApp alerts)' : '*'}
                 </label>
                 <input
                   type="tel"
@@ -216,7 +234,20 @@ export default function CartPage() {
                 />
               </div>
             </div>
-          )}
+
+            {/* Feature 2: WhatsApp Updates Opt-in */}
+            <label className="flex items-center gap-2 cursor-pointer pt-1">
+              <input
+                type="checkbox"
+                checked={whatsappOptIn}
+                onChange={(e) => setWhatsappOptIn(e.target.checked)}
+                className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 accent-emerald-600 cursor-pointer"
+              />
+              <span className="text-xs text-neutral-700 font-medium">
+                Get instant bill & live order updates on WhatsApp 💬
+              </span>
+            </label>
+          </div>
         </div>
 
         {/* 2. Cart Items List */}

@@ -18,6 +18,8 @@ import {
   Utensils,
   ShoppingBag,
   MessageSquare,
+  Sparkles,
+  Star,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -80,6 +82,7 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
   const [utrHintInput, setUtrHintInput] = useState('');
   const [submittingHint, setSubmittingHint] = useState(false);
   const [hintSubmitted, setHintSubmitted] = useState(false);
+  const [customerRating, setCustomerRating] = useState<number>(0);
 
   const fetchOrder = useCallback(async () => {
     try {
@@ -346,6 +349,39 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
           </div>
         </div>
 
+        {/* Feature 2: Live WhatsApp Status & Direct Chat Card */}
+        <div className="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200/90 shadow-xs flex items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+              <MessageSquare className="w-4 h-4 fill-white" />
+            </div>
+            <div>
+              <div className="font-bold text-neutral-900 flex items-center gap-1.5">
+                <span>WhatsApp Live Updates</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              </div>
+              <div className="text-[11px] text-neutral-600">
+                {isReady
+                  ? '🎉 Food is ready! Please collect at counter.'
+                  : isPreparing
+                  ? '👨‍🍳 Kitchen is preparing your order fresh.'
+                  : '⏳ Waiting for counter to verify payment.'}
+              </div>
+            </div>
+          </div>
+
+          <a
+            href={`https://wa.me/${(shop?.phone || '918686878675').replace(/\D/g, '')}?text=${encodeURIComponent(
+              `Hi Wrap Nation! My order token is ${orderTokenLabel} (${order.type}). Please send me live updates.`
+            )}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="py-1.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shrink-0 shadow-xs transition"
+          >
+            Chat
+          </a>
+        </div>
+
         {/* 3. Awaiting Payment Section (Direct UPI QR / Cash instructions) */}
         {isAwaitingPayment && (
           <div className="p-6 rounded-3xl bg-white border-2 border-amber-400/60 space-y-6 shadow-md">
@@ -553,6 +589,75 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
               <span>Print 80mm Slip</span>
             </button>
           </div>
+        </div>
+
+        {/* Feature 6: Google Maps Review Booster */}
+        <div className="p-5 rounded-2xl bg-white border border-neutral-200/80 text-center space-y-3 shadow-xs">
+          <div className="space-y-0.5">
+            <div className="flex items-center justify-center gap-1.5 text-amber-500">
+              <Sparkles className="w-4 h-4" />
+              <span className="text-xs font-black uppercase tracking-wider text-neutral-900">
+                How was your food & experience?
+              </span>
+            </div>
+            <p className="text-xs text-neutral-500">
+              Tap stars to rate Wrap Nation
+            </p>
+          </div>
+
+          {/* 5 Interactive Stars */}
+          <div className="flex items-center justify-center gap-2.5 py-1">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                type="button"
+                onClick={() => setCustomerRating(star)}
+                className="text-3xl transition-transform active:scale-125 hover:scale-110 cursor-pointer"
+                aria-label={`Rate ${star} star`}
+              >
+                {customerRating >= star ? '⭐' : '☆'}
+              </button>
+            ))}
+          </div>
+
+          {/* 4 or 5 Stars -> Google Review Booster Link */}
+          {customerRating >= 4 && (
+            <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-300 space-y-2 text-center">
+              <p className="text-xs font-bold text-neutral-900">
+                🎉 Thank you so much! Please take 10 seconds to share your review on Google Maps.
+              </p>
+              <a
+                href="https://search.google.com/local/writereview?placeid=ChIJwrapnation_demo"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-1.5 py-2 px-5 rounded-xl bg-amber-400 hover:bg-amber-300 text-neutral-950 font-black text-xs uppercase tracking-wider shadow-sm transition"
+              >
+                <Star className="w-3.5 h-3.5 fill-neutral-950" />
+                <span>Review on Google Maps</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
+          )}
+
+          {/* 1, 2, or 3 Stars -> Private Feedback to Shop Owner */}
+          {customerRating > 0 && customerRating <= 3 && (
+            <div className="p-3.5 rounded-xl bg-neutral-50 border border-neutral-200 space-y-2 text-left">
+              <p className="text-xs text-neutral-700 font-medium">
+                We are sorry your experience was not perfect! Please message the shop owner directly so we can resolve it immediately:
+              </p>
+              <a
+                href={`https://wa.me/${(shop?.phone || '918686878675').replace(/\D/g, '')}?text=${encodeURIComponent(
+                  `Hi Wrap Nation Owner, I have feedback regarding Order ${orderTokenLabel}: `
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 py-2 px-4 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white font-bold text-xs shadow-sm transition"
+              >
+                <MessageSquare className="w-3.5 h-3.5 text-amber-400" />
+                <span>Message Owner on WhatsApp</span>
+              </a>
+            </div>
+          )}
         </div>
 
         {/* Printable Receipt for 80mm Browser Fallback */}
