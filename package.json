@@ -5,7 +5,6 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
-    "postinstall": "prisma generate",
     "start": "next start",
     "lint": "eslint",
     "db:daemon": "node scripts/db-daemon.js",
@@ -33,7 +32,7 @@
   "devDependencies": {
     "@playwright/test": "^1.64.1",
     "@tailwindcss/turbopack": "^4",
-    "@types/node": "^20",
+    "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "embedded-postgres": "^18.4.0-beta.17",
