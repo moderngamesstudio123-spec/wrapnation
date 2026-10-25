@@ -13,6 +13,7 @@ import {
   getFallbackOrder,
   updateFallbackOrder,
   getNextOrderNumber,
+  getMaxFallbackDailyOrderStats,
   setTableOccupied,
   vacateTableStore,
   getTableOccupancy,
@@ -168,28 +169,39 @@ export async function createOrder(params: CreateOrderParams, ip?: string) {
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
 
-  let orderNumber = 101;
-  let takeawayToken: string | null = null;
-  try {
-    const todayOrderCount = await prisma.order.count({
-      where: { createdAt: { gte: startOfDay } },
-    });
-    orderNumber = 101 + todayOrderCount;
+  const fallbackStats = getMaxFallbackDailyOrderStats(startOfDay);
 
+  let maxPrismaOrderNumber = 100;
+  let prismaTakeawayCount = 0;
+
+  try {
+    const highestTodayOrder = await prisma.order.findFirst({
+      where: { createdAt: { gte: startOfDay } },
+      orderBy: { orderNumber: 'desc' },
+      select: { orderNumber: true },
+    });
+    if (highestTodayOrder?.orderNumber) {
+      maxPrismaOrderNumber = highestTodayOrder.orderNumber;
+    }
     if (params.type === 'TAKEAWAY') {
-      const todayTakeawayCount = await prisma.order.count({
+      prismaTakeawayCount = await prisma.order.count({
         where: {
           createdAt: { gte: startOfDay },
           type: OrderType.TAKEAWAY,
         },
       });
-      takeawayToken = `T-${todayTakeawayCount + 1}`;
     }
   } catch {
-    orderNumber = getNextOrderNumber();
-    if (params.type === 'TAKEAWAY') {
-      takeawayToken = `T-${orderNumber - 100}`;
-    }
+    // Database offline or query failed - fallback gracefully
+  }
+
+  // Next order number is strictly sequential, never repeating 101
+  const orderNumber = getNextOrderNumber(Math.max(maxPrismaOrderNumber, fallbackStats.maxOrderNumber));
+
+  let takeawayToken: string | null = null;
+  if (params.type === 'TAKEAWAY') {
+    const nextTokenNum = Math.max(prismaTakeawayCount, fallbackStats.takeawayCount, orderNumber - 100);
+    takeawayToken = `T-${nextTokenNum}`;
   }
 
   const timeoutMins = settings.unpaidOrderTimeoutMins || 15;

@@ -6,6 +6,9 @@ import { requireAuth } from '@/lib/auth/session';
 import prisma from '@/lib/db';
 import { getAllFallbackOrders } from '@/server/services/orderStore';
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function POST(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1';
 
@@ -160,5 +163,14 @@ export async function GET(req: NextRequest) {
     finalOrders = finalOrders.filter((o: any) => o.status === statusParam);
   }
 
-  return NextResponse.json({ orders: finalOrders });
+  return NextResponse.json(
+    { orders: finalOrders },
+    {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        Pragma: 'no-cache',
+        Expires: '0',
+      },
+    }
+  );
 }

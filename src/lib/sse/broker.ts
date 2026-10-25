@@ -56,5 +56,16 @@ class SSEBroker {
   }
 }
 
-export const sseBroker = new SSEBroker();
+declare global {
+  // eslint-disable-next-line no-var
+  var __wrapNationSSEBroker: SSEBroker | undefined;
+}
+
+export const sseBroker: SSEBroker =
+  globalThis.__wrapNationSSEBroker || new SSEBroker();
+
+if (!globalThis.__wrapNationSSEBroker) {
+  globalThis.__wrapNationSSEBroker = sseBroker;
+}
+
 export default sseBroker;

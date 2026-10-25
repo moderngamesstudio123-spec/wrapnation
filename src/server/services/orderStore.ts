@@ -47,32 +47,87 @@ const TMP_ORDERS_FILE = path.join(
   'wrapnation_fallback_orders.json'
 );
 
+function getTodayKey(): string {
+  return new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD in local time
+}
+
 function syncOrdersFromFile() {
   try {
     if (fs.existsSync(TMP_ORDERS_FILE)) {
-      const data = JSON.parse(fs.readFileSync(TMP_ORDERS_FILE, 'utf-8'));
-      if (Array.isArray(data)) {
-        for (const o of data) {
-          if (!global.__wrapNationFallbackOrders!.has(o.id)) {
-            global.__wrapNationFallbackOrders!.set(o.id, o);
+      const raw = fs.readFileSync(TMP_ORDERS_FILE, 'utf-8');
+      const parsed = JSON.parse(raw);
+
+      let orderList: FallbackOrder[] = [];
+      let savedDate: string | undefined;
+      let savedCounter: number | undefined;
+
+      if (Array.isArray(parsed)) {
+        orderList = parsed;
+      } else if (parsed && typeof parsed === 'object') {
+        orderList = Array.isArray(parsed.orders) ? parsed.orders : [];
+        savedDate = parsed.dailyDate;
+        savedCounter = parsed.lastOrderNumber;
+        if (parsed.occupiedTables && typeof parsed.occupiedTables === 'object') {
+          for (const [t, data] of Object.entries(parsed.occupiedTables)) {
+            global.__wrapNationOccupiedTables!.set(Number(t), data as any);
           }
         }
       }
+
+      for (const o of orderList) {
+        if (!global.__wrapNationFallbackOrders!.has(o.id)) {
+          global.__wrapNationFallbackOrders!.set(o.id, o);
+        }
+      }
+
+      const todayKey = getTodayKey();
+      let maxTodayOrder = 100;
+      for (const o of global.__wrapNationFallbackOrders!.values()) {
+        try {
+          const oDate = new Date(o.createdAt).toLocaleDateString('en-CA');
+          if (oDate === todayKey && typeof o.orderNumber === 'number' && o.orderNumber > maxTodayOrder) {
+            maxTodayOrder = o.orderNumber;
+          }
+        } catch {}
+      }
+
+      if (savedDate === todayKey && typeof savedCounter === 'number' && savedCounter > maxTodayOrder) {
+        maxTodayOrder = savedCounter;
+      }
+
+      global.__wrapNationOrderCounter = Math.max(global.__wrapNationOrderCounter || 100, maxTodayOrder);
     }
-  } catch {}
+  } catch (err) {
+    console.warn('Error reading fallback orders file:', err);
+  }
 }
 
 function persistOrdersToFile() {
   try {
     const list = Array.from(global.__wrapNationFallbackOrders!.values());
-    fs.writeFileSync(TMP_ORDERS_FILE, JSON.stringify(list), 'utf-8');
-  } catch {}
+    const tables: Record<number, any> = {};
+    for (const [t, d] of global.__wrapNationOccupiedTables!.entries()) {
+      tables[t] = d;
+    }
+
+    const payload = {
+      dailyDate: getTodayKey(),
+      lastOrderNumber: global.__wrapNationOrderCounter || 100,
+      orders: list,
+      occupiedTables: tables,
+      updatedAt: new Date().toISOString(),
+    };
+
+    fs.writeFileSync(TMP_ORDERS_FILE, JSON.stringify(payload, null, 2), 'utf-8');
+  } catch (err) {
+    console.warn('Error persisting fallback orders file:', err);
+  }
 }
 
 export async function syncOrdersFromCloud(): Promise<void> {
   try {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 2000);
+    const timer = setTimeout(() => controller.abort(), 1200);
     const res = await fetch(CLOUD_STORE_URL, {
       signal: controller.signal,
       cache: 'no-store',
@@ -104,7 +159,7 @@ export async function persistOrdersToCloud(): Promise<void> {
       tables[t] = d;
     }
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 2500);
+    const timer = setTimeout(() => controller.abort(), 1500);
     await fetch(CLOUD_STORE_URL, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -125,25 +180,33 @@ if (!global.__wrapNationFallbackOrders) {
   global.__wrapNationFallbackOrders = new Map<string, FallbackOrder>();
 }
 if (!global.__wrapNationOrderCounter) {
-  global.__wrapNationOrderCounter = 101;
+  global.__wrapNationOrderCounter = 100;
 }
 if (!global.__wrapNationOccupiedTables) {
   global.__wrapNationOccupiedTables = new Map();
 }
 
+// Initial sync on boot
+syncOrdersFromFile();
+
 export async function saveFallbackOrder(order: FallbackOrder): Promise<void> {
+  syncOrdersFromFile();
   global.__wrapNationFallbackOrders!.set(order.id, order);
+  if (typeof order.orderNumber === 'number' && order.orderNumber > (global.__wrapNationOrderCounter || 100)) {
+    global.__wrapNationOrderCounter = order.orderNumber;
+  }
   persistOrdersToFile();
   if (order.tableNumber && ['AWAITING_PAYMENT', 'PAID', 'PREPARING', 'READY'].includes(order.status)) {
     setTableOccupied(order.tableNumber, order.id, order.orderNumber);
   }
-  await persistOrdersToCloud().catch(() => {});
+  persistOrdersToCloud().catch(() => {});
 }
 
 export async function getFallbackOrder(id: string): Promise<FallbackOrder | null> {
   syncOrdersFromFile();
   let found = global.__wrapNationFallbackOrders!.get(id);
   if (!found) {
+    // Non-blocking quick check
     await syncOrdersFromCloud().catch(() => {});
     found = global.__wrapNationFallbackOrders!.get(id);
   }
@@ -152,7 +215,8 @@ export async function getFallbackOrder(id: string): Promise<FallbackOrder | null
 
 export async function getAllFallbackOrders(): Promise<FallbackOrder[]> {
   syncOrdersFromFile();
-  await syncOrdersFromCloud().catch(() => {});
+  // Sync to/from cloud in the background so local responses are instant (<5ms)
+  syncOrdersFromCloud().catch(() => {});
   return Array.from(global.__wrapNationFallbackOrders!.values()).reverse();
 }
 
@@ -166,14 +230,45 @@ export async function updateFallbackOrder(id: string, updates: Partial<FallbackO
   if (!order) return null;
   Object.assign(order, updates);
   persistOrdersToFile();
-  await persistOrdersToCloud().catch(() => {});
+  persistOrdersToCloud().catch(() => {});
   return order;
 }
 
-export function getNextOrderNumber(): number {
-  const current = global.__wrapNationOrderCounter || 101;
-  global.__wrapNationOrderCounter = current + 1;
-  return current;
+export function getMaxFallbackDailyOrderStats(startOfDay: Date): { maxOrderNumber: number; takeawayCount: number } {
+  syncOrdersFromFile();
+  let maxOrderNumber = 100;
+  let takeawayCount = 0;
+  const startMs = startOfDay.getTime();
+
+  for (const o of global.__wrapNationFallbackOrders!.values()) {
+    try {
+      const createdAtMs = new Date(o.createdAt).getTime();
+      if (createdAtMs >= startMs) {
+        if (typeof o.orderNumber === 'number' && o.orderNumber > maxOrderNumber) {
+          maxOrderNumber = o.orderNumber;
+        }
+        if (o.type === 'TAKEAWAY') {
+          takeawayCount++;
+        }
+      }
+    } catch {}
+  }
+
+  const currentCounter = global.__wrapNationOrderCounter || 100;
+  if (currentCounter > maxOrderNumber) {
+    maxOrderNumber = currentCounter;
+  }
+
+  return { maxOrderNumber, takeawayCount };
+}
+
+export function getNextOrderNumber(seedMin?: number): number {
+  syncOrdersFromFile();
+  const current = global.__wrapNationOrderCounter || 100;
+  const next = Math.max(current, seedMin || 100, 100) + 1;
+  global.__wrapNationOrderCounter = next;
+  persistOrdersToFile();
+  return next;
 }
 
 export function setTableOccupied(tableNumber: number, orderId: string, orderNumber: number) {

@@ -60,7 +60,8 @@ export default function AdminLiveOrdersPage() {
   const [selectedOrderForPayment, setSelectedOrderForPayment] = useState<Order | null>(null);
   const [reprintingOrderId, setReprintingOrderId] = useState<string | null>(null);
 
-  const prevOrderCountRef = useRef<number>(0);
+  const knownOrderIdsRef = useRef<Set<string>>(new Set());
+  const isInitialLoadRef = useRef<boolean>(true);
 
   // Synthesize sound alert using Web Audio API (zero audio file dependencies)
   const playAudioChime = useCallback(() => {
@@ -98,31 +99,50 @@ export default function AdminLiveOrdersPage() {
 
   const fetchOrders = useCallback(async () => {
     try {
-      const res = await fetch('/api/orders');
+      const res = await fetch('/api/orders', { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
         const incomingOrders: Order[] = data.orders || [];
 
-        // Check if a new order arrived
-        if (
-          prevOrderCountRef.current > 0 &&
-          incomingOrders.length > prevOrderCountRef.current
-        ) {
-          playAudioChime();
+        // Check if brand new order arrived (not present in previous set)
+        if (!isInitialLoadRef.current) {
+          const hasNewOrder = incomingOrders.some(
+            (o) =>
+              !knownOrderIdsRef.current.has(o.id) &&
+              (o.status === 'AWAITING_PAYMENT' || o.status === 'PAID')
+          );
+          if (hasNewOrder) {
+            playAudioChime();
+          }
+        } else {
+          isInitialLoadRef.current = false;
         }
 
-        prevOrderCountRef.current = incomingOrders.length;
+        // Store current known IDs
+        incomingOrders.forEach((o) => knownOrderIdsRef.current.add(o.id));
         setOrders(incomingOrders);
       }
-    } catch {}
-    setLoading(false);
+    } catch (err) {
+      console.warn('Live orders fetch failed:', err);
+    } finally {
+      setLoading(false);
+    }
   }, [playAudioChime]);
 
   useEffect(() => {
     fetchOrders();
 
-    // Connect to Server-Sent Events for real-time live feed
+    // Connect to Server-Sent Events for instant real-time feed
     const eventSource = new EventSource('/api/orders/stream');
+
+    eventSource.onopen = () => {
+      fetchOrders();
+    };
+
+    eventSource.onerror = () => {
+      // Re-fetch fallback on disconnect/reconnect
+      fetchOrders();
+    };
 
     eventSource.addEventListener('NEW_ORDER', () => {
       playAudioChime();
@@ -141,11 +161,23 @@ export default function AdminLiveOrdersPage() {
       fetchOrders();
     });
 
-    const pollInterval = setInterval(fetchOrders, 8000);
+    // 3.5s tight poll fallback to guarantee orders never lag on kitchen screen
+    const pollInterval = setInterval(fetchOrders, 3500);
+
+    // Refresh instantly when staff returns to tab or wakes mobile screen
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchOrders();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', fetchOrders);
 
     return () => {
       eventSource.close();
       clearInterval(pollInterval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', fetchOrders);
     };
   }, [fetchOrders, playAudioChime]);
 

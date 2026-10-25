@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import {
   Clock,
@@ -20,6 +20,8 @@ import {
   MessageSquare,
   Sparkles,
   Star,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -84,9 +86,108 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
   const [hintSubmitted, setHintSubmitted] = useState(false);
   const [customerRating, setCustomerRating] = useState<number>(0);
 
+  // Phone Ring & Beep notification state
+  const [isRinging, setIsRinging] = useState(false);
+  const [soundMuted, setSoundMuted] = useState(false);
+  const [audioUnlocked, setAudioUnlocked] = useState(false);
+
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const ringIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const hasPlayedReadyAlertRef = useRef<boolean>(false);
+
+  // Pleasant restaurant bell chime synthesizer (pure Web Audio API, zero dependencies)
+  const playPickupRingSound = useCallback(() => {
+    if (soundMuted) return;
+    try {
+      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (!AudioCtx) return;
+      if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
+        audioContextRef.current = new AudioCtx();
+      }
+      const ctx = audioContextRef.current;
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
+
+      const now = ctx.currentTime;
+
+      // Chord 1: Gentle energetic chime (D5 -> A5 -> D6)
+      const notes = [
+        { freq: 587.33, start: 0.0, dur: 0.35, gain: 0.35 },  // D5
+        { freq: 880.00, start: 0.16, dur: 0.4, gain: 0.4 },   // A5
+        { freq: 1174.66, start: 0.35, dur: 0.65, gain: 0.45 }, // D6
+      ];
+
+      notes.forEach(({ freq, start, dur, gain }) => {
+        const osc = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, now + start);
+
+        gainNode.gain.setValueAtTime(gain, now + start);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, now + start + dur);
+
+        osc.connect(gainNode);
+        gainNode.connect(ctx.destination);
+
+        osc.start(now + start);
+        osc.stop(now + start + dur);
+      });
+
+      // Chord 2: Bright sparkling echo burst
+      const echoNotes = [
+        { freq: 880.00, start: 0.8, dur: 0.3, gain: 0.35 },
+        { freq: 1396.91, start: 0.95, dur: 0.7, gain: 0.45 },
+      ];
+
+      echoNotes.forEach(({ freq, start, dur, gain }) => {
+        const osc = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + start);
+
+        gainNode.gain.setValueAtTime(gain, now + start);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, now + start + dur);
+
+        osc.connect(gainNode);
+        gainNode.connect(ctx.destination);
+
+        osc.start(now + start);
+        osc.stop(now + start + dur);
+      });
+
+      // Mobile phone physical vibration
+      if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+        navigator.vibrate([300, 150, 300, 150, 500]);
+      }
+    } catch (e) {
+      console.warn('Audio ring playback error:', e);
+    }
+  }, [soundMuted]);
+
+  const triggerReadyAlert = useCallback(() => {
+    if (hasPlayedReadyAlertRef.current) return;
+    hasPlayedReadyAlertRef.current = true;
+    setIsRinging(true);
+    playPickupRingSound();
+
+    // Repeat chime sequence 3 times every 3.5 seconds so customer doesn't miss it
+    let ringsCount = 1;
+    if (ringIntervalRef.current) clearInterval(ringIntervalRef.current);
+    ringIntervalRef.current = setInterval(() => {
+      ringsCount++;
+      if (ringsCount >= 3) {
+        if (ringIntervalRef.current) clearInterval(ringIntervalRef.current);
+        setIsRinging(false);
+      } else {
+        playPickupRingSound();
+      }
+    }, 3500);
+  }, [playPickupRingSound]);
+
   const fetchOrder = useCallback(async () => {
     try {
-      const res = await fetch(`/api/orders/${orderId}`);
+      const res = await fetch(`/api/orders/${orderId}`, { cache: 'no-store' });
       if (!res.ok) {
         // Fallback to client cached order if serverless lambda has not synced
         let cachedOrder: any = null;
@@ -126,9 +227,14 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
       setOrder(data.order);
       setUpiData(data.upiPaymentData);
       setShop(data.shop);
-      if (data.order.customerUtrHint) {
+      if (data.order?.customerUtrHint) {
         setUtrHintInput(data.order.customerUtrHint);
         setHintSubmitted(true);
+      }
+
+      // If order is ready, sound the chime!
+      if (data.order?.status === 'READY') {
+        triggerReadyAlert();
       }
     } catch (err: unknown) {
       // If error occurred, check client cache one more time before showing error
@@ -164,10 +270,27 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
     } finally {
       setLoading(false);
     }
-  }, [orderId]);
+  }, [orderId, triggerReadyAlert]);
 
   useEffect(() => {
     fetchOrder();
+
+    // Auto-unlock AudioContext on first tap/touch
+    const unlockAudio = () => {
+      try {
+        const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        if (!audioContextRef.current && AudioCtx) {
+          audioContextRef.current = new AudioCtx();
+        }
+        if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
+          audioContextRef.current.resume();
+        }
+        setAudioUnlocked(true);
+      } catch {}
+    };
+
+    window.addEventListener('click', unlockAudio, { once: true });
+    window.addEventListener('touchstart', unlockAudio, { once: true });
 
     // Connect to Server-Sent Events for real-time live updates
     const eventSource = new EventSource(`/api/orders/stream?orderId=${orderId}`);
@@ -176,6 +299,9 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
       try {
         const payload = JSON.parse(event.data);
         setOrder((prev) => (prev ? { ...prev, status: payload.status } : null));
+        if (payload.status === 'READY') {
+          triggerReadyAlert();
+        }
       } catch {}
     });
 
@@ -188,14 +314,17 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
       fetchOrder();
     };
 
-    // Periodic poll fallback every 12 seconds
-    const interval = setInterval(fetchOrder, 12000);
+    // Periodic poll fallback every 4.5 seconds for instant detection
+    const interval = setInterval(fetchOrder, 4500);
 
     return () => {
       eventSource.close();
       clearInterval(interval);
+      window.removeEventListener('click', unlockAudio);
+      window.removeEventListener('touchstart', unlockAudio);
+      if (ringIntervalRef.current) clearInterval(ringIntervalRef.current);
     };
-  }, [orderId, fetchOrder]);
+  }, [orderId, fetchOrder, triggerReadyAlert]);
 
   const handleSubmitHint = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -283,6 +412,69 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
       <main className="max-w-xl mx-auto p-4 space-y-6">
         {/* Interactive Screen Cards (Hidden during Print) */}
         <div className="no-print space-y-6">
+        {/* Ringing Sound Banner when order is READY */}
+        {isReady && (
+          <div className="p-5 rounded-3xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 text-white shadow-lg space-y-3 border-2 border-emerald-300 ring-4 ring-emerald-400/30">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className={`w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center ${isRinging ? 'animate-bounce' : ''}`}>
+                  <Bell className="w-6 h-6 text-white stroke-[2.5]" />
+                </div>
+                <div>
+                  <h3 className="text-base sm:text-lg font-black tracking-tight leading-tight">
+                    YOUR ORDER IS PACKED & READY! 🌯
+                  </h3>
+                  <p className="text-xs text-emerald-100 font-medium">
+                    {isRinging ? '🔔 Ringing chime... Please collect from the counter!' : 'Ready at counter. Enjoy your meal!'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {isRinging ? (
+                  <button
+                    onClick={() => {
+                      setIsRinging(false);
+                      if (ringIntervalRef.current) clearInterval(ringIntervalRef.current);
+                    }}
+                    className="px-3.5 py-2 rounded-xl bg-white text-emerald-950 font-black text-xs shadow-md hover:bg-emerald-50 active:scale-95 transition cursor-pointer shrink-0"
+                  >
+                    Mute Chime
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => playPickupRingSound()}
+                    className="px-3 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs transition cursor-pointer flex items-center gap-1.5 shrink-0"
+                  >
+                    <Volume2 className="w-3.5 h-3.5" />
+                    <span>Re-Ring</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Reassuring Sound Indicator while awaiting food */}
+        {!isReady && !isCompleted && !isCancelled && (
+          <div className="p-3 px-4 rounded-2xl bg-amber-50/90 border border-amber-200/90 flex items-center justify-between gap-2 text-xs shadow-2xs">
+            <div className="flex items-center gap-2">
+              <Bell className="w-4 h-4 text-amber-600 shrink-0" />
+              <span className="font-semibold text-amber-950">
+                Phone ring alert active: Phone will beep when wrap is packed.
+              </span>
+            </div>
+            <button
+              onClick={() => {
+                playPickupRingSound();
+                setAudioUnlocked(true);
+              }}
+              className="py-1 px-2.5 rounded-xl bg-white border border-amber-300 text-amber-900 font-black text-[11px] shadow-2xs hover:bg-amber-100/60 active:scale-95 transition cursor-pointer shrink-0"
+            >
+              Test Ring 🔔
+            </button>
+          </div>
+        )}
+
         {/* 1. Big Order Number Token Card */}
         <div className="p-6 rounded-3xl bg-white border border-neutral-200/80 text-center space-y-3 shadow-sm">
           <div className="inline-flex items-center gap-2 py-1 px-3 rounded-full bg-neutral-100 text-neutral-700 text-xs font-bold">
