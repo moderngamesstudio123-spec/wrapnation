@@ -5,6 +5,22 @@ import { signTableToken } from '@/lib/security/hmac';
 import { getSettings } from '@/server/services/settingService';
 import QRCode from 'qrcode';
 
+import os from 'os';
+
+function getLocalIp(): string {
+  try {
+    const nets = os.networkInterfaces();
+    for (const name of Object.keys(nets)) {
+      for (const net of nets[name] || []) {
+        if (net.family === 'IPv4' && !net.internal) {
+          return net.address;
+        }
+      }
+    }
+  } catch {}
+  return 'localhost';
+}
+
 export async function GET(req: NextRequest) {
   try {
     await requireAuth(); // STAFF or OWNER
@@ -15,8 +31,14 @@ export async function GET(req: NextRequest) {
   const settings = await getSettings();
   const tablesCount = settings.tablesCount || 12;
 
-  // Derive origin from request URL or configured APP_URL
-  const origin = req.nextUrl.origin || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  // Derive origin: if localhost on local machine, substitute real local Wi-Fi IP so phones can scan & reach it!
+  let origin = req.nextUrl.origin || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+    const localIp = getLocalIp();
+    if (localIp !== 'localhost') {
+      origin = origin.replace('localhost', localIp).replace('127.0.0.1', localIp);
+    }
+  }
 
   const tables: Array<{
     tableNumber: number;
