@@ -41,15 +41,16 @@ export const createOrderSchema = z.object({
   paymentMethod: z.enum(['UPI', 'CASH']).default('UPI'),
   items: z.array(orderItemInputSchema).min(1, 'Order must contain at least one item').max(30, 'Max 30 items per order'),
 }).strict().refine((data) => {
-  if (data.type === 'DINE_IN' && !data.tableToken) {
-    return false;
-  }
-  if (data.type === 'TAKEAWAY' && (!data.customerPhone || !data.customerName)) {
+  // Name and 10-digit phone number are required for order tracking and WhatsApp
+  if (!data.customerName || !data.customerPhone) {
+    if (data.type === 'DINE_IN' && data.tableToken) {
+      return true;
+    }
     return false;
   }
   return true;
 }, {
-  message: 'Missing required fields for selected order type (Dine-in requires table token; Takeaway requires name & 10-digit phone)',
+  message: 'Customer name and 10-digit mobile number are required for order calling and WhatsApp updates.',
 });
 
 export const markPaidSchema = z.object({

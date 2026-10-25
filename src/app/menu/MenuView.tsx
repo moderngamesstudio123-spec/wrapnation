@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useCart } from '@/lib/customer/cartContext';
 import MenuItemCard from '@/components/customer/MenuItemCard';
 import BottomCartBar from '@/components/customer/BottomCartBar';
+import ActiveOrderBanner from '@/components/customer/ActiveOrderBanner';
 import { Search, Utensils, ShoppingBag, X, Zap, ArrowRight } from 'lucide-react';
 
 interface FavoriteOrderItem {
@@ -156,10 +157,11 @@ export default function MenuView({
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-neutral-900 pb-28">
-      {/* 1. Header Bar */}
-      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-neutral-200/90 shadow-xs">
-        <div className="max-w-2xl mx-auto px-4 py-3 space-y-3">
+    <div className="min-h-screen bg-neutral-950 flex justify-center selection:bg-amber-400 selection:text-neutral-950">
+      <div className="w-full max-w-md min-h-screen bg-[#FAF7F2] text-neutral-900 pb-28 relative shadow-2xl border-x border-neutral-200/60 flex flex-col">
+        {/* 1. Header Bar */}
+        <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-neutral-200/90 shadow-xs">
+          <div className="px-4 py-3 space-y-3">
           {/* Top row: Brand & Dine-in/Takeaway badge */}
           <div className="flex items-center justify-between">
             <div>
@@ -235,7 +237,7 @@ export default function MenuView({
         </div>
 
         {/* 2. Sticky Horizontal Category Tabs */}
-        <div className="max-w-2xl mx-auto px-4">
+        <div className="px-4">
           <nav
             aria-label="Menu categories"
             className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2 border-t border-neutral-100"
@@ -260,6 +262,9 @@ export default function MenuView({
           </nav>
         </div>
       </header>
+
+      {/* Active In-Progress Order Banner (Never lose your order if you hit Back) */}
+      <ActiveOrderBanner />
 
       {/* Feature 7: 1-Click Favorite Re-Order Banner */}
       {favoriteOrder && !dismissFavorite && (
@@ -379,6 +384,7 @@ export default function MenuView({
 
       {/* 4. Bottom Sticky Cart Bar */}
       <BottomCartBar />
+      </div>
     </div>
   );
 }

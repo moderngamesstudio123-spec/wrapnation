@@ -56,28 +56,26 @@ export default function CartPage() {
       return;
     }
 
-    if (!isDineIn) {
-      if (!nameInput.trim()) {
-        setErrorMessage('Please enter your name for takeaway fulfillment.');
-        return;
-      }
-      const cleanPhone = phoneInput.replace(/\D/g, '');
-      if (cleanPhone.length !== 10 || !/^[6-9]\d{9}$/.test(cleanPhone)) {
-        setErrorMessage('Please enter a valid 10-digit Indian mobile number.');
-        return;
-      }
-      setCustomerDetails(nameInput.trim(), cleanPhone);
+    if (!nameInput.trim()) {
+      setErrorMessage('Please enter your name so staff can call out your order.');
+      return;
     }
+    const cleanPhone = phoneInput.replace(/\D/g, '');
+    if (cleanPhone.length !== 10 || !/^[6-9]\d{9}$/.test(cleanPhone)) {
+      setErrorMessage('Please enter a valid 10-digit Indian mobile number for WhatsApp order updates.');
+      return;
+    }
+    setCustomerDetails(nameInput.trim(), cleanPhone);
 
     setIsSubmitting(true);
 
     try {
       const orderPayload = {
-        type: isDineIn ? 'DINE_IN' : 'TAKEAWAY',
+        type: isDineIn && tableToken ? 'DINE_IN' : 'TAKEAWAY',
         tableToken: isDineIn ? tableToken : null,
-        customerName: isDineIn ? null : nameInput.trim(),
-        customerPhone: isDineIn ? null : phoneInput.replace(/\D/g, ''),
-        whatsappOptIn,
+        customerName: nameInput.trim(),
+        customerPhone: cleanPhone,
+        whatsappOptIn: true,
         cookingNote: noteInput.trim() ? noteInput.trim().slice(0, 200) : null,
         paymentMethod,
         items: items.map((i) => ({
@@ -100,29 +98,23 @@ export default function CartPage() {
         throw new Error(data.error || 'Failed to place order');
       }
 
-      // Feature 7: Save last order as favorite in localStorage for 1-Click Re-Order
+      // Save order in localStorage for Active Order tracking across back navigations & app reloads
       try {
-        localStorage.setItem(
-          'wrapnation_favorite_order',
-          JSON.stringify({
-            orderNumber: data.order.orderNumber,
-            summary: items.map((i) => `${i.name}${i.quantity > 1 ? ` x${i.quantity}` : ''}`).join(', '),
-            items: items.map((i) => ({
-              menuItem: { id: i.menuItemId, name: i.name, basePrice: i.basePrice, isVeg: i.isVeg },
-              variant: i.variantId ? { id: i.variantId, name: i.variantName || '', priceDelta: i.variantDelta } : null,
-              addOns: i.addOns,
-              quantity: i.quantity,
-            })),
-            placedAt: new Date().toISOString(),
-          })
-        );
-      } catch {}
-
-      // Save order in sessionStorage and localStorage for resilient client-side tracking across serverless instances
-      try {
+        const activeOrderData = {
+          id: data.order.id,
+          orderNumber: data.order.orderNumber,
+          status: data.order.status || 'AWAITING_PAYMENT',
+          total: data.order.total,
+          totalFormatted: `Rs ${Math.round(data.order.total / 100)}`,
+          customerName: data.order.customerName,
+          customerPhone: data.order.customerPhone,
+          createdAt: data.order.createdAt || new Date().toISOString(),
+        };
+        localStorage.setItem('wrapnation_active_order', JSON.stringify(activeOrderData));
+        localStorage.setItem('wrapnation_active_order_id', data.order.id);
+        localStorage.setItem('wrapnation_last_table_order', data.order.id);
         sessionStorage.setItem('wrapnation_order_' + data.order.id, JSON.stringify(data.order));
         localStorage.setItem('wrapnation_order_' + data.order.id, JSON.stringify(data.order));
-        localStorage.setItem('wrapnation_last_table_order', data.order.id);
       } catch {}
 
       // Clear cart and redirect to order status tracking page
@@ -158,10 +150,11 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-neutral-900 pb-32">
-      {/* Top Header */}
-      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-neutral-200 shadow-xs">
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
+    <div className="min-h-screen bg-neutral-950 flex justify-center selection:bg-amber-400 selection:text-neutral-950">
+      <div className="w-full max-w-md min-h-screen bg-[#FAF7F2] text-neutral-900 pb-32 relative shadow-2xl border-x border-neutral-200/60 flex flex-col">
+        {/* Top Header */}
+        <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-neutral-200 shadow-xs">
+          <div className="px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link
               href="/menu"
@@ -216,24 +209,24 @@ export default function CartPage() {
           <div className="space-y-3 pt-1">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-neutral-600 font-semibold block mb-1">
-                  Customer Name {isDineIn ? '(Optional)' : '*'}
+                <label className="text-xs text-neutral-800 font-bold block mb-1">
+                  Customer Name <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
-                  placeholder="Your Name"
+                  placeholder="e.g. Bilal"
                   value={nameInput}
                   onChange={(e) => setNameInput(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl bg-neutral-50 border border-neutral-200 text-neutral-900 text-sm focus:outline-none focus:border-amber-400 focus:bg-white"
                 />
               </div>
               <div>
-                <label className="text-xs text-neutral-600 font-semibold block mb-1">
-                  10-Digit Mobile Number {isDineIn ? '(For WhatsApp alerts)' : '*'}
+                <label className="text-xs text-neutral-800 font-bold block mb-1">
+                  10-Digit WhatsApp Mobile <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="tel"
-                  placeholder="9876543210"
+                  placeholder="e.g. 9876543210"
                   maxLength={10}
                   value={phoneInput}
                   onChange={(e) => setPhoneInput(e.target.value.replace(/\D/g, ''))}
@@ -426,24 +419,23 @@ export default function CartPage() {
         </div>
       </main>
 
-      {/* Floating Place Order Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-white/95 backdrop-blur-md border-t border-neutral-200 shadow-xl">
-        <div className="max-w-2xl mx-auto">
-          <button
-            onClick={handlePlaceOrder}
-            disabled={isSubmitting}
-            className="w-full py-4 px-6 rounded-2xl bg-amber-400 hover:bg-amber-300 active:bg-amber-500 disabled:opacity-60 text-neutral-950 font-black text-base uppercase tracking-wider shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                <span>Confirming Order...</span>
-              </>
-            ) : (
-              <span>Place Order • {formatPaise(subtotalPaise)}</span>
-            )}
-          </button>
-        </div>
+      {/* Floating Place Order Bottom Bar (Constrained to Mobile Width) */}
+      <div className="fixed bottom-0 left-0 right-0 sm:left-auto sm:right-auto sm:w-full sm:max-w-md z-40 p-4 bg-white/95 backdrop-blur-md border-t border-neutral-200 shadow-xl">
+        <button
+          onClick={handlePlaceOrder}
+          disabled={isSubmitting}
+          className="w-full py-4 px-6 rounded-2xl bg-amber-400 hover:bg-amber-300 active:bg-amber-500 disabled:opacity-60 text-neutral-950 font-black text-base uppercase tracking-wider shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span>Confirming Order...</span>
+            </>
+          ) : (
+            <span>Place Order • {formatPaise(subtotalPaise)}</span>
+          )}
+        </button>
+      </div>
       </div>
     </div>
   );

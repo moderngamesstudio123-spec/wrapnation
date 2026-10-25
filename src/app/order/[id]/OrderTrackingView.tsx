@@ -227,6 +227,20 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
       setOrder(data.order);
       setUpiData(data.upiPaymentData);
       setShop(data.shop);
+      // Sync active order state in localStorage so back button or reload never loses it
+      if (['COMPLETED', 'CANCELLED', 'EXPIRED'].includes(data.order.status)) {
+        localStorage.removeItem('wrapnation_active_order');
+        localStorage.removeItem('wrapnation_active_order_id');
+      } else {
+        localStorage.setItem('wrapnation_active_order', JSON.stringify({
+          id: data.order.id,
+          orderNumber: data.order.orderNumber,
+          status: data.order.status,
+          totalFormatted: data.order.totalFormatted,
+          customerName: data.order.customerName,
+        }));
+        localStorage.setItem('wrapnation_active_order_id', data.order.id);
+      }
       if (data.order?.customerUtrHint) {
         setUtrHintInput(data.order.customerUtrHint);
         setHintSubmitted(true);
@@ -384,30 +398,27 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
       : `#${order.orderNumber}`;
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-neutral-900 pb-20">
-      {/* Top Header */}
-      <header className="bg-white border-b border-neutral-200/80 p-4 sticky top-0 z-30 shadow-xs no-print">
-        <div className="max-w-xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
+    <div className="min-h-screen bg-neutral-950 flex justify-center selection:bg-amber-400 selection:text-neutral-950">
+      <div className="w-full max-w-md min-h-screen bg-[#FAF7F2] text-neutral-900 pb-20 relative shadow-2xl border-x border-neutral-200/60 flex flex-col">
+        {/* Top Header */}
+        <header className="bg-white border-b border-neutral-200/80 p-3.5 sticky top-0 z-30 shadow-xs no-print">
+          <div className="flex items-center justify-between">
             <Link
               href="/menu"
-              className="text-xs font-bold text-neutral-500 hover:text-neutral-900 transition"
+              className="flex items-center gap-1.5 py-1.5 px-3 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-xs font-black text-amber-950 transition shadow-2xs"
             >
-              ← Menu
+              <span>← Back to Menu</span>
             </Link>
-            <span className="text-neutral-300">/</span>
-            <span className="text-xs font-bold text-amber-600">Order Tracking</span>
-          </div>
 
-          <button
-            onClick={() => window.print()}
-            className="flex items-center gap-1.5 py-1.5 px-3 rounded-lg bg-neutral-100 hover:bg-neutral-200 border border-neutral-200 text-xs font-semibold text-neutral-700 transition cursor-pointer"
-          >
-            <Printer className="w-3.5 h-3.5" />
-            <span>Print Bill</span>
-          </button>
-        </div>
-      </header>
+            <button
+              onClick={() => window.print()}
+              className="flex items-center gap-1.5 py-1.5 px-3 rounded-xl bg-neutral-100 hover:bg-neutral-200 border border-neutral-200 text-xs font-bold text-neutral-700 transition cursor-pointer"
+            >
+              <Printer className="w-3.5 h-3.5" />
+              <span>Print Bill</span>
+            </button>
+          </div>
+        </header>
 
       <main className="max-w-xl mx-auto p-4 space-y-6">
         {/* Interactive Screen Cards (Hidden during Print) */}
@@ -492,12 +503,15 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
           </div>
 
           <div>
-            <span className="text-xs text-neutral-500 uppercase tracking-widest block font-medium">
-              Your Order Token
+            <span className="text-xs text-neutral-500 uppercase tracking-widest block font-bold">
+              Your Order Calling Number
             </span>
-            <div className="text-4xl sm:text-5xl font-black text-amber-500 tracking-tight mt-1">
-              {orderTokenLabel}
+            <div className="text-5xl font-black text-amber-500 tracking-tight mt-1">
+              Order #{order.orderNumber}
             </div>
+            <p className="text-xs text-neutral-600 font-bold mt-1.5">
+              📢 Staff will call out <span className="text-neutral-950 font-black underline">Order #{order.orderNumber}</span> when food is packed!
+            </p>
           </div>
 
           {/* Status Badge */}
@@ -532,6 +546,35 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
               </span>
             )}
           </div>
+        </div>
+
+        {/* Instant WhatsApp Order Updates & Live Tracking Card */}
+        <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-300 shadow-xs space-y-2.5">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-emerald-500 text-white flex items-center justify-center text-lg font-bold shrink-0">
+              💬
+            </div>
+            <div>
+              <h4 className="text-xs font-black text-emerald-950 leading-tight">
+                Live WhatsApp Tracking
+              </h4>
+              <p className="text-[11px] text-emerald-700 font-medium">
+                Receipt & live link sent to {order.customerPhone ? `+91 ${order.customerPhone}` : 'your phone'}.
+              </p>
+            </div>
+          </div>
+
+          <a
+            href={`https://api.whatsapp.com/send?phone=91${(order.customerPhone || '').replace(/\D/g, '')}&text=${encodeURIComponent(
+              `🌯 *Wrap Nation — Order #${order.orderNumber}* ⚡\n\nHi ${order.customerName || 'Customer'},\nYour order has been received!\n\n🔢 *Order Number:* #${order.orderNumber}\n💰 *Amount:* ${order.totalFormatted} (${order.paymentMethod})\n📍 *Track Live Status & View Bill:*\n${typeof window !== 'undefined' ? window.location.href : `https://wrapnation.vercel.app/order/${order.id}`}\n\nStaff will call out *Order #${order.orderNumber}* when food is ready!\nThank you for ordering with Wrap Nation!`
+            )}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-black text-xs flex items-center justify-center gap-2 shadow-xs transition cursor-pointer"
+          >
+            <span>Open Order in WhatsApp</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
         </div>
 
         {/* 2. Step Progress Bar */}
@@ -974,6 +1017,7 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
           </div>
         </div>
       </main>
+      </div>
     </div>
   );
 }

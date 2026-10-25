@@ -50,21 +50,17 @@ export async function createOrder(params: CreateOrderParams, ip?: string) {
     throw new Error(shopStatus.message || 'Shop is currently closed');
   }
 
-  // 2. Validate Dine-in table token or Takeaway credentials
+  // 2. Validate Dine-in table token (if provided) or customer credentials
   let tableNumber: number | null = null;
-  if (params.type === 'DINE_IN') {
-    if (!params.tableToken) {
-      throw new Error('Dine-in orders require a valid scanned table QR token');
-    }
+  if (params.tableToken) {
     const tokenVerification = verifyTableToken(params.tableToken);
-    if (!tokenVerification.valid || !tokenVerification.tableNumber) {
-      throw new Error('Invalid or tampered table QR token. Please scan the QR code on your table again.');
+    if (tokenVerification.valid && tokenVerification.tableNumber) {
+      tableNumber = tokenVerification.tableNumber;
     }
-    tableNumber = tokenVerification.tableNumber;
-  } else {
-    if (!params.customerName || !params.customerPhone) {
-      throw new Error('Takeaway orders require customer name and 10-digit mobile number');
-    }
+  }
+
+  if (!tableNumber && (!params.customerName || !params.customerPhone)) {
+    throw new Error('Please provide customer name and 10-digit mobile number so staff can call out your order.');
   }
 
   const settings = await getSettings();

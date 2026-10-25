@@ -25,13 +25,13 @@ export default function HomeActionClient({ tables, shopPhone }: HomeActionClient
   return (
     <>
       <div className="space-y-3 max-w-sm mx-auto w-full">
-        {/* 1. Takeaway Order */}
+        {/* 1. Primary Digital Menu & Order Button */}
         <Link
-          href="/takeaway"
+          href="/menu"
           className="w-full py-4 px-6 rounded-2xl bg-amber-400 hover:bg-amber-300 active:bg-amber-500 text-neutral-950 font-black text-base uppercase tracking-wider shadow-xl transition flex items-center justify-center gap-2 group cursor-pointer"
         >
           <ShoppingBag className="w-5 h-5" />
-          <span>Order Takeaway</span>
+          <span>View Menu & Order</span>
           <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
         </Link>
 

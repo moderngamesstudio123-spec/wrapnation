@@ -21,22 +21,16 @@ export default function MenuItemCard({ item }: MenuItemCardProps) {
 
   const handleAddClick = () => {
     if (!item.isAvailable) return;
-    if (hasCustomizations) {
-      setIsModalOpen(true);
-    } else {
-      addItem({
-        id: item.id,
-        name: item.name,
-        basePrice: item.basePrice,
-        isVeg: item.isVeg,
-      });
-    }
+    addItem({
+      id: item.id,
+      name: item.name,
+      basePrice: item.basePrice,
+      isVeg: item.isVeg,
+    });
   };
 
   const handleIncrement = () => {
-    if (hasCustomizations) {
-      setIsModalOpen(true);
-    } else if (firstCartItem) {
+    if (firstCartItem) {
       updateQuantity(firstCartItem.key, 1);
     } else {
       handleAddClick();
@@ -161,11 +155,15 @@ export default function MenuItemCard({ item }: MenuItemCardProps) {
               </div>
             )}
 
-            {/* Customizable hint text below button */}
+            {/* Customizable button below stepper */}
             {hasCustomizations && item.isAvailable && (
-              <span className="text-[10px] text-neutral-500 font-semibold block text-center mt-1">
-                customisable
-              </span>
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(true)}
+                className="text-[10px] text-amber-700 hover:text-amber-900 font-bold block text-center mt-1 underline cursor-pointer hover:scale-105 transition"
+              >
+                Customise ›
+              </button>
             )}
           </div>
         </div>

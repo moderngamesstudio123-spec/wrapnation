@@ -4,6 +4,7 @@ import { UtensilsCrossed, ShoppingBag, ArrowRight, ShieldCheck, QrCode, Star, Fl
 import { getSettings } from '@/server/services/settingService';
 import { signTableToken } from '@/lib/security/hmac';
 import HomeActionClient from './HomeActionClient';
+import ActiveOrderBanner from '@/components/customer/ActiveOrderBanner';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,25 +22,29 @@ export default async function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-neutral-900 flex flex-col justify-between selection:bg-amber-400 selection:text-neutral-950">
-      {/* Header */}
-      <header className="p-4 sm:p-6 border-b border-neutral-200 bg-white/90 backdrop-blur-md sticky top-0 z-20 shadow-xs">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl font-black tracking-tight text-neutral-950 uppercase font-sans">
-              Wrap <span className="text-amber-500">Nation</span>
-            </span>
-            <span className="text-amber-500 font-black text-xl">⚡</span>
-          </div>
+    <div className="min-h-screen bg-neutral-950 flex justify-center selection:bg-amber-400 selection:text-neutral-950">
+      <div className="w-full max-w-md min-h-screen bg-[#FAF7F2] text-neutral-900 flex flex-col justify-between relative shadow-2xl border-x border-neutral-200/60">
+        {/* Header */}
+        <header className="p-4 border-b border-neutral-200 bg-white/90 backdrop-blur-md sticky top-0 z-20 shadow-xs">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-black tracking-tight text-neutral-950 uppercase font-sans">
+                Wrap <span className="text-amber-500">Nation</span>
+              </span>
+              <span className="text-amber-500 font-black text-lg">⚡</span>
+            </div>
 
-          <Link
-            href="/login"
-            className="text-xs font-bold text-neutral-700 hover:text-neutral-950 py-1.5 px-3 rounded-xl bg-white border border-neutral-300 hover:border-neutral-400 shadow-xs transition"
-          >
-            Staff Login →
-          </Link>
-        </div>
-      </header>
+            <Link
+              href="/login"
+              className="text-xs font-bold text-neutral-700 hover:text-neutral-950 py-1.5 px-3 rounded-xl bg-white border border-neutral-300 hover:border-neutral-400 shadow-xs transition"
+            >
+              Staff Login →
+            </Link>
+          </div>
+        </header>
+
+        {/* Active In-Progress Order Banner (Never lose your order if you hit Back) */}
+        <ActiveOrderBanner />
 
       {/* Hero Section */}
       <main className="max-w-xl mx-auto px-4 py-8 sm:py-14 text-center space-y-8">
@@ -130,6 +135,7 @@ export default async function HomePage() {
         <p>© {new Date().getFullYear()} {settings.shopName}. All rights reserved.</p>
         <p className="text-[11px] text-neutral-500 mt-1">{settings.shopAddress}</p>
       </footer>
+      </div>
     </div>
   );
 }
