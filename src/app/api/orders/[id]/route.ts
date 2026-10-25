@@ -3,6 +3,7 @@ import prisma from '@/lib/db';
 import { getSettings } from '@/server/services/settingService';
 import { formatPaise } from '@/lib/format';
 import QRCode from 'qrcode';
+import { getFallbackOrder } from '@/server/services/orderStore';
 
 export async function GET(
   req: NextRequest,
@@ -10,13 +11,22 @@ export async function GET(
 ) {
   const { id } = await params;
 
-  const order = await prisma.order.findUnique({
-    where: { id },
-    include: {
-      orderItems: true,
-      payments: { where: { status: 'PAID' }, take: 1 },
-    },
-  });
+  let order: any = null;
+  try {
+    order = await prisma.order.findUnique({
+      where: { id },
+      include: {
+        orderItems: true,
+        payments: { where: { status: 'PAID' }, take: 1 },
+      },
+    });
+  } catch (err) {
+    console.warn('Database connection warning in /api/orders/[id]:', err);
+  }
+
+  if (!order) {
+    order = getFallbackOrder(id);
+  }
 
   if (!order) {
     return NextResponse.json({ error: 'Order not found' }, { status: 404 });
@@ -83,7 +93,7 @@ export async function GET(
       expiresAt: order.expiresAt,
       completedAt: order.completedAt,
       createdAt: order.createdAt,
-      orderItems: order.orderItems.map((item) => {
+      orderItems: (order.orderItems || []).map((item: any) => {
         let addOns = [];
         try {
           addOns = JSON.parse(item.addOnsJson || '[]');

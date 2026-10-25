@@ -1,4 +1,5 @@
 import prisma from '@/lib/db';
+import crypto from 'crypto';
 import { verifyTableToken } from '@/lib/security/hmac';
 import { getSettings, isShopOpen } from './settingService';
 import { queueOrderPrintJobs } from './printerService';
@@ -6,6 +7,10 @@ import { sendOrderConfirmedNotification, sendOrderReadyNotification } from './wh
 import { sseBroker } from '@/lib/sse/broker';
 import { logAudit } from './auditService';
 import { OrderStatus, PaymentStatus, PaymentMethod, OrderType, User } from '@prisma/client';
+import { DEFAULT_CATEGORIES } from './defaultMenu';
+import { saveFallbackOrder, getNextOrderNumber } from './orderStore';
+
+const ALL_FALLBACK_ITEMS = DEFAULT_CATEGORIES.flatMap((c) => c.items);
 
 export interface CreateOrderItemInput {
   menuItemId: string;
@@ -54,15 +59,24 @@ export async function createOrder(params: CreateOrderParams, ip?: string) {
 
   const settings = await getSettings();
 
-  // 3. Fetch all requested Menu Items from the database
+  // 3. Fetch all requested Menu Items from the database (or fallback items)
   const menuItemIds = [...new Set(params.items.map((i) => i.menuItemId))];
-  const dbMenuItems = await prisma.menuItem.findMany({
-    where: { id: { in: menuItemIds }, isAvailable: true },
-    include: {
-      variants: { where: { isAvailable: true } },
-      addOnLinks: { include: { addOn: true } },
-    },
-  });
+  let dbMenuItems: any[] = [];
+  try {
+    dbMenuItems = await prisma.menuItem.findMany({
+      where: { id: { in: menuItemIds }, isAvailable: true },
+      include: {
+        variants: { where: { isAvailable: true } },
+        addOnLinks: { include: { addOn: true } },
+      },
+    });
+  } catch (err) {
+    console.warn('Database connection warning in createOrder:', err);
+  }
+
+  if (dbMenuItems.length === 0) {
+    dbMenuItems = ALL_FALLBACK_ITEMS.filter((i) => menuItemIds.includes(i.id));
+  }
 
   const menuItemMap = new Map(dbMenuItems.map((item) => [item.id, item]));
 
@@ -95,7 +109,7 @@ export async function createOrder(params: CreateOrderParams, ip?: string) {
 
     // Check variant
     if (itemInput.variantId) {
-      const dbVariant = dbItem.variants.find((v) => v.id === itemInput.variantId);
+      const dbVariant = dbItem.variants?.find((v: any) => v.id === itemInput.variantId);
       if (!dbVariant) {
         throw new Error(`Invalid or unavailable variant selected for ${dbItem.name}`);
       }
@@ -107,7 +121,7 @@ export async function createOrder(params: CreateOrderParams, ip?: string) {
     const addOnSnapshots: Array<{ name: string; price: number }> = [];
     if (itemInput.addOnIds && itemInput.addOnIds.length > 0) {
       for (const addOnId of itemInput.addOnIds) {
-        const addOnLink = dbItem.addOnLinks.find((link) => link.addOnId === addOnId);
+        const addOnLink = dbItem.addOnLinks?.find((link: any) => (link.addOnId || link.addOn?.id) === addOnId);
         if (!addOnLink || !addOnLink.addOn) {
           throw new Error(`Invalid or unavailable add-on selected for ${dbItem.name}`);
         }
@@ -145,55 +159,106 @@ export async function createOrder(params: CreateOrderParams, ip?: string) {
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
 
-  const todayOrderCount = await prisma.order.count({
-    where: { createdAt: { gte: startOfDay } },
-  });
-  const orderNumber = 101 + todayOrderCount;
-
+  let orderNumber = 101;
   let takeawayToken: string | null = null;
-  if (params.type === 'TAKEAWAY') {
-    const todayTakeawayCount = await prisma.order.count({
-      where: {
-        createdAt: { gte: startOfDay },
-        type: OrderType.TAKEAWAY,
-      },
+  try {
+    const todayOrderCount = await prisma.order.count({
+      where: { createdAt: { gte: startOfDay } },
     });
-    takeawayToken = `T-${todayTakeawayCount + 1}`;
+    orderNumber = 101 + todayOrderCount;
+
+    if (params.type === 'TAKEAWAY') {
+      const todayTakeawayCount = await prisma.order.count({
+        where: {
+          createdAt: { gte: startOfDay },
+          type: OrderType.TAKEAWAY,
+        },
+      });
+      takeawayToken = `T-${todayTakeawayCount + 1}`;
+    }
+  } catch {
+    orderNumber = getNextOrderNumber();
+    if (params.type === 'TAKEAWAY') {
+      takeawayToken = `T-${orderNumber - 100}`;
+    }
   }
 
   const timeoutMins = settings.unpaidOrderTimeoutMins || 15;
   const expiresAt = new Date(Date.now() + timeoutMins * 60 * 1000);
 
-  // 6. Create Order and OrderItems in database transaction
-  const order = await prisma.$transaction(async (tx) => {
-    const newOrder = await tx.order.create({
-      data: {
-        orderNumber,
-        takeawayToken,
-        type: params.type === 'DINE_IN' ? OrderType.DINE_IN : OrderType.TAKEAWAY,
-        tableNumber,
-        status: OrderStatus.AWAITING_PAYMENT,
-        paymentStatus: PaymentStatus.PENDING,
-        paymentMethod: params.paymentMethod === 'CASH' ? PaymentMethod.CASH : PaymentMethod.UPI,
-        customerName: params.customerName?.trim() || null,
-        customerPhone: params.customerPhone?.trim() || null,
-        whatsappOptIn: params.whatsappOptIn || false,
-        cookingNote: params.cookingNote?.trim() ? params.cookingNote.trim().slice(0, 200) : null,
-        subtotal: orderSubtotalPaise,
-        tax: orderTaxPaise,
-        total: orderTotalPaise,
-        expiresAt,
-        orderItems: {
-          create: orderItemsData,
+  // 6. Create Order and OrderItems in database transaction (with memory fallback)
+  let order: any = null;
+  try {
+    order = await prisma.$transaction(async (tx) => {
+      const newOrder = await tx.order.create({
+        data: {
+          orderNumber,
+          takeawayToken,
+          type: params.type === 'DINE_IN' ? OrderType.DINE_IN : OrderType.TAKEAWAY,
+          tableNumber,
+          status: OrderStatus.AWAITING_PAYMENT,
+          paymentStatus: PaymentStatus.PENDING,
+          paymentMethod: params.paymentMethod === 'CASH' ? PaymentMethod.CASH : PaymentMethod.UPI,
+          customerName: params.customerName?.trim() || null,
+          customerPhone: params.customerPhone?.trim() || null,
+          whatsappOptIn: params.whatsappOptIn || false,
+          cookingNote: params.cookingNote?.trim() ? params.cookingNote.trim().slice(0, 200) : null,
+          subtotal: orderSubtotalPaise,
+          tax: orderTaxPaise,
+          total: orderTotalPaise,
+          expiresAt,
+          orderItems: {
+            create: orderItemsData,
+          },
         },
-      },
-      include: {
-        orderItems: true,
-      },
-    });
+        include: {
+          orderItems: true,
+        },
+      });
 
-    return newOrder;
-  });
+      return newOrder;
+    });
+  } catch (txErr) {
+    console.warn('Database error saving order, saving to resilient fallback store:', txErr);
+    const fallbackId = crypto.randomUUID();
+    order = {
+      id: fallbackId,
+      orderNumber,
+      takeawayToken,
+      type: params.type,
+      tableNumber,
+      status: 'AWAITING_PAYMENT',
+      paymentStatus: 'PENDING',
+      paymentMethod: params.paymentMethod || 'UPI',
+      customerName: params.customerName?.trim() || null,
+      customerPhone: params.customerPhone?.trim() || null,
+      customerUtrHint: null,
+      whatsappOptIn: params.whatsappOptIn || false,
+      cookingNote: params.cookingNote?.trim() || null,
+      subtotal: orderSubtotalPaise,
+      tax: orderTaxPaise,
+      total: orderTotalPaise,
+      expiresAt,
+      completedAt: null,
+      createdAt: new Date(),
+      orderItems: orderItemsData.map((d, idx) => ({
+        id: `oi-${fallbackId}-${idx}`,
+        orderId: fallbackId,
+        menuItemId: d.menuItemId,
+        variantId: d.variantId || null,
+        itemName: d.itemName,
+        variantName: d.variantName || null,
+        unitPrice: d.unitPrice,
+        quantity: d.quantity,
+        subtotal: d.subtotal,
+        addOnsJson: d.addOnsJson,
+        notes: d.notes || null,
+        createdAt: new Date(),
+      })),
+      payments: [],
+    };
+    saveFallbackOrder(order);
+  }
 
   // 7. Broadcast new order to Admin POS via SSE (triggers audio sound in POS)
   sseBroker.broadcast('NEW_ORDER', {
