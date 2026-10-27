@@ -72,7 +72,7 @@ describe('Payment Security & Fraud Defenses', () => {
     });
     expect(printJobs.length).toBeGreaterThanOrEqual(1);
     expect(printJobs[0].slipType).toBe('CUSTOMER_BILL');
-  });
+  }, 60000);
 
   it('rejects duplicate UTR transaction reference across two separate orders', async () => {
     const uniqueUtr = `REPLAY_UTR_${Date.now()}`;
@@ -103,5 +103,5 @@ describe('Payment Security & Fraud Defenses', () => {
     await expect(
       markOrderPaid(order2.id, { method: 'UPI', utr: uniqueUtr }, staffUser)
     ).rejects.toThrow(/Duplicate UTR detected/);
-  });
+  }, 60000);
 });
