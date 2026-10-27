@@ -2,7 +2,6 @@ import React from 'react';
 import Link from 'next/link';
 import { UtensilsCrossed, ShoppingBag, ArrowRight, ShieldCheck, QrCode, Star, Flame } from 'lucide-react';
 import { getSettings } from '@/server/services/settingService';
-import { signTableToken } from '@/lib/security/hmac';
 import HomeActionClient from './HomeActionClient';
 import ActiveOrderBanner from '@/components/customer/ActiveOrderBanner';
 
@@ -10,16 +9,6 @@ export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
   const settings = await getSettings();
-
-  // Generate table tokens for tables 1 to tablesCount
-  const tablesCount = settings.tablesCount || 12;
-  const tables = [];
-  for (let i = 1; i <= tablesCount; i++) {
-    tables.push({
-      tableNumber: i,
-      signedToken: signTableToken(i),
-    });
-  }
 
   return (
     <div className="min-h-screen bg-neutral-950 flex justify-center selection:bg-amber-400 selection:text-neutral-950">
@@ -115,17 +104,17 @@ export default async function HomePage() {
           </Link>
         </div>
 
-        {/* Action Client: Takeaway, Table Selector Modal, and WhatsApp */}
-        <HomeActionClient tables={tables} shopPhone={settings.shopPhone} />
+        {/* Action Client: Menu & WhatsApp */}
+        <HomeActionClient shopPhone={settings.shopPhone} />
 
-        {/* Dine-in Guidance Notice */}
+        {/* QR Menu Guidance Notice */}
         <div className="p-4 rounded-2xl bg-white border border-neutral-200 text-xs text-neutral-600 text-left space-y-1.5 shadow-xs">
           <div className="flex items-center gap-2 text-neutral-900 font-bold">
             <QrCode className="w-4 h-4 text-amber-600" />
-            <span>Table QR Code Scanner:</span>
+            <span>Instant Mobile Ordering:</span>
           </div>
           <p className="text-[11px] leading-relaxed">
-            If you are seated at Wrap Nation, scan the QR sticker on your table with your phone camera or tap &ldquo;Dine-In (Select Table #)&rdquo; above.
+            Scan the QR code at Wrap Nation with your phone camera or tap &ldquo;View Menu & Order&rdquo; above. Pay via UPI or Cash at the counter with instant WhatsApp tracking!
           </p>
         </div>
       </main>

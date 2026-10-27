@@ -89,8 +89,22 @@ export async function GET(req: NextRequest) {
     color: { dark: '#000000', light: '#ffffff' },
   });
 
+  // Master Single Restaurant Menu QR (Directly opens /menu for all customers)
+  const masterMenuUrl = `${origin}/menu`;
+  const masterMenuQrDataUrl = await QRCode.toDataURL(masterMenuUrl, {
+    width: 600,
+    margin: 4,
+    errorCorrectionLevel: 'H',
+    color: { dark: '#000000', light: '#ffffff' },
+  });
+
   return NextResponse.json({
     shopName: settings.shopName,
+    shopPhone: settings.shopPhone,
+    masterMenuQr: {
+      orderUrl: masterMenuUrl,
+      qrDataUrl: masterMenuQrDataUrl,
+    },
     tables,
     takeaway: {
       orderUrl: takeawayUrl,

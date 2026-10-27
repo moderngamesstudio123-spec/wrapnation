@@ -27,31 +27,18 @@ export const orderItemInputSchema = z.object({
 }).strict();
 
 export const createOrderSchema = z.object({
-  type: z.enum(['DINE_IN', 'TAKEAWAY']),
+  type: z.enum(['DINE_IN', 'TAKEAWAY']).default('DINE_IN'),
   tableToken: z.string().optional().nullable(),
-  customerName: z.string().trim().max(50, 'Name max 50 chars').optional().nullable(),
+  customerName: z.string().trim().min(1, 'Please enter your name').max(50, 'Name max 50 chars'),
   customerPhone: z
     .string()
     .trim()
-    .regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit Indian mobile number')
-    .optional()
-    .nullable(),
-  whatsappOptIn: z.boolean().default(false),
+    .regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit Indian mobile number'),
+  whatsappOptIn: z.boolean().default(true),
   cookingNote: z.string().trim().max(200, 'Cooking note max 200 characters').optional().nullable(),
   paymentMethod: z.enum(['UPI', 'CASH']).default('UPI'),
   items: z.array(orderItemInputSchema).min(1, 'Order must contain at least one item').max(30, 'Max 30 items per order'),
-}).strict().refine((data) => {
-  // Name and 10-digit phone number are required for order tracking and WhatsApp
-  if (!data.customerName || !data.customerPhone) {
-    if (data.type === 'DINE_IN' && data.tableToken) {
-      return true;
-    }
-    return false;
-  }
-  return true;
-}, {
-  message: 'Customer name and 10-digit mobile number are required for order calling and WhatsApp updates.',
-});
+}).strict();
 
 export const markPaidSchema = z.object({
   method: z.enum(['UPI', 'CASH']),

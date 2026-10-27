@@ -61,7 +61,7 @@ export default function AdminNav({ user }: AdminNavProps) {
     ...(user.role === 'OWNER'
       ? [{ href: '/admin/reports', label: 'Reports', icon: BarChart3 }]
       : []),
-    { href: '/admin/tables', label: 'Table QRs', icon: QrCode },
+    { href: '/admin/tables', label: 'Menu QR Standee', icon: QrCode },
     ...(user.role === 'OWNER'
       ? [{ href: '/admin/settings', label: 'Settings', icon: Settings }]
       : []),

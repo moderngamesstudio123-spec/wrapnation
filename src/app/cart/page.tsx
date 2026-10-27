@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/lib/customer/cartContext';
@@ -11,7 +11,6 @@ import {
   Plus,
   Minus,
   Trash2,
-  Utensils,
   ShoppingBag,
   QrCode,
   Banknote,
@@ -24,9 +23,6 @@ export default function CartPage() {
   const router = useRouter();
   const {
     items,
-    tableToken,
-    tableNumber,
-    isDineIn,
     customerName,
     customerPhone,
     cookingNote,
@@ -45,8 +41,20 @@ export default function CartPage() {
   const [nameInput, setNameInput] = useState(customerName);
   const [phoneInput, setPhoneInput] = useState(customerPhone);
   const [noteInput, setNoteInput] = useState(cookingNote);
+  const [shopPhone, setShopPhone] = useState('918125057086');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/settings')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.settings?.shopPhone) {
+          setShopPhone(data.settings.shopPhone.replace(/\D/g, ''));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handlePlaceOrder = async () => {
     setErrorMessage(null);
@@ -71,8 +79,8 @@ export default function CartPage() {
 
     try {
       const orderPayload = {
-        type: isDineIn && tableToken ? 'DINE_IN' : 'TAKEAWAY',
-        tableToken: isDineIn ? tableToken : null,
+        type: 'DINE_IN',
+        tableToken: null,
         customerName: nameInput.trim(),
         customerPhone: cleanPhone,
         whatsappOptIn: true,
@@ -112,13 +120,39 @@ export default function CartPage() {
         };
         localStorage.setItem('wrapnation_active_order', JSON.stringify(activeOrderData));
         localStorage.setItem('wrapnation_active_order_id', data.order.id);
-        localStorage.setItem('wrapnation_last_table_order', data.order.id);
         sessionStorage.setItem('wrapnation_order_' + data.order.id, JSON.stringify(data.order));
         localStorage.setItem('wrapnation_order_' + data.order.id, JSON.stringify(data.order));
       } catch {}
 
-      // Clear cart and redirect to order status tracking page
+      // Clear cart
       clearCart();
+
+      // Construct WhatsApp message with Order #XYZ and live tracking URL
+      const cleanTargetPhone = shopPhone || '918125057086';
+      const orderNum = data.order.orderNumber;
+      const orderId = data.order.id;
+      const custName = data.order.customerName || nameInput.trim();
+      const amount = `Rs ${Math.round(data.order.total / 100)}`;
+      const payMode = paymentMethod === 'CASH' ? 'Cash at Counter' : 'UPI Online';
+      const trackingUrl = `${window.location.origin}/order/${orderId}`;
+
+      const waMessage = `🌯 *Wrap Nation — Order #${orderNum}* ⚡\n\n` +
+        `Hi Wrap Nation! New order placed:\n` +
+        `👤 *Name:* ${custName}\n` +
+        `📱 *Mobile:* ${cleanPhone}\n` +
+        `🔢 *Order Number:* #${orderNum}\n` +
+        `💰 *Amount:* ${amount} (${payMode})\n\n` +
+        `📍 *Track Live Status:*\n${trackingUrl}\n\n` +
+        `Staff will call out Order #${orderNum} when ready!`;
+
+      const whatsappUrl = `https://api.whatsapp.com/send?phone=${cleanTargetPhone}&text=${encodeURIComponent(waMessage)}`;
+
+      // Open WhatsApp automatically with pre-filled order details
+      try {
+        window.open(whatsappUrl, '_blank');
+      } catch {}
+
+      // Navigate to order tracking view
       router.replace(`/order/${data.order.id}`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'An error occurred while placing order';
@@ -182,28 +216,19 @@ export default function CartPage() {
           </div>
         )}
 
-        {/* 1. Fulfillment Type Banner */}
+        {/* 1. Order Details & Customer Info */}
         <div className="p-4 rounded-2xl bg-white border border-neutral-200 shadow-xs space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              {isDineIn ? (
-                <Utensils className="w-5 h-5 text-amber-500" />
-              ) : (
-                <ShoppingBag className="w-5 h-5 text-amber-500" />
-              )}
-              <span className="font-bold text-sm text-neutral-900">
-                {isDineIn ? `Dine-in: Table #${tableNumber}` : 'Takeaway Order'}
-              </span>
+              <span className="text-xl">🌯</span>
+              <div>
+                <span className="font-black text-sm text-neutral-900 block">Wrap Nation Order</span>
+                <span className="text-[11px] text-neutral-500 font-medium">Freshly prepared on order</span>
+              </div>
             </div>
-            {isDineIn ? (
-              <span className="text-[11px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-300 px-2.5 py-0.5 rounded-full">
-                QR Verified
-              </span>
-            ) : (
-              <span className="text-[11px] font-semibold text-neutral-600 bg-neutral-100 border border-neutral-200 px-2.5 py-0.5 rounded-full">
-                Pick up at counter
-              </span>
-            )}
+            <span className="text-[11px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-300 px-2.5 py-1 rounded-full flex items-center gap-1">
+              <span>💬 Live WhatsApp Updates</span>
+            </span>
           </div>
 
           <div className="space-y-3 pt-1">
@@ -235,18 +260,13 @@ export default function CartPage() {
               </div>
             </div>
 
-            {/* Feature 2: WhatsApp Updates Opt-in */}
-            <label className="flex items-center gap-2 cursor-pointer pt-1">
-              <input
-                type="checkbox"
-                checked={whatsappOptIn}
-                onChange={(e) => setWhatsappOptIn(e.target.checked)}
-                className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 accent-emerald-600 cursor-pointer"
-              />
-              <span className="text-xs text-neutral-700 font-medium">
-                Get instant bill & live order updates on WhatsApp 💬
+            {/* WhatsApp Updates Notice */}
+            <div className="p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200 text-emerald-900 text-xs flex items-center gap-2">
+              <span className="text-base">📱</span>
+              <span className="text-[11px] font-medium leading-snug">
+                Your Order Number (#XYZ) and live tracking link will be sent to WhatsApp automatically!
               </span>
-            </label>
+            </div>
           </div>
         </div>
 

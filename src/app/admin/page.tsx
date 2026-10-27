@@ -399,20 +399,28 @@ export default function AdminLiveOrdersPage() {
                       <div className="text-3xl font-black text-neutral-950 tracking-tight">
                         {orderTokenLabel}
                       </div>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-xs font-bold text-neutral-800 flex items-center gap-1">
-                          {order.type === 'DINE_IN' ? (
-                            <>
-                              <Utensils className="w-3.5 h-3.5 text-amber-600" />
-                              <span>Table {order.tableNumber}</span>
-                            </>
-                          ) : (
-                            <>
-                              <ShoppingBag className="w-3.5 h-3.5 text-amber-600" />
-                              <span>Takeaway ({order.customerName || 'Counter'})</span>
-                            </>
-                          )}
+                      <div className="flex flex-col gap-1 mt-0.5">
+                        <span className="text-xs font-bold text-neutral-800 flex items-center gap-1.5">
+                          <span className="text-amber-500 font-black">👤</span>
+                          <span>{order.customerName || (order.tableNumber ? `Table ${order.tableNumber}` : 'Customer')}</span>
                         </span>
+                        {order.customerPhone && (
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[11px] text-neutral-600 font-medium">
+                              📱 {order.customerPhone}
+                            </span>
+                            <a
+                              href={`https://wa.me/91${order.customerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(
+                                `Hi ${order.customerName || ''}, Wrap Nation here regarding your order #${order.orderNumber}!`
+                              )}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[10px] text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full font-bold inline-flex items-center gap-1"
+                            >
+                              <span>WhatsApp</span>
+                            </a>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -501,13 +509,22 @@ export default function AdminLiveOrdersPage() {
                       <span>Mark Paid (UPI / Cash)</span>
                     </button>
                   ) : order.status === 'PAID' || order.status === 'PREPARING' ? (
-                    <button
-                      onClick={() => handleUpdateStatus(order.id, 'READY')}
-                      className="w-full py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600 text-neutral-950 font-black text-xs uppercase tracking-wider shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
-                    >
-                      <Bell className="w-4 h-4 stroke-[3]" />
-                      <span>Mark Ready for Pickup</span>
-                    </button>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => handleUpdateStatus(order.id, 'READY')}
+                        className="py-3 px-3 rounded-xl bg-amber-400 hover:bg-amber-300 active:bg-amber-500 text-neutral-950 font-black text-xs uppercase tracking-wider shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <Bell className="w-4 h-4 stroke-[3]" />
+                        <span>Ready</span>
+                      </button>
+                      <button
+                        onClick={() => handleUpdateStatus(order.id, 'COMPLETED')}
+                        className="py-3 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600 text-neutral-950 font-black text-xs uppercase tracking-wider shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <CheckCheck className="w-4 h-4 stroke-[3]" />
+                        <span>Completed</span>
+                      </button>
+                    </div>
                   ) : order.status === 'READY' ? (
                     <button
                       onClick={() => handleUpdateStatus(order.id, 'COMPLETED')}

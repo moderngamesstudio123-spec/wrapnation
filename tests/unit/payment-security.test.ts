@@ -26,6 +26,8 @@ describe('Payment Security & Fraud Defenses', () => {
       type: 'DINE_IN',
       tableToken,
       paymentMethod: 'UPI',
+      customerName: 'Test Customer',
+      customerPhone: '9876543210',
       items: [{ menuItemId: testItemId, addOnIds: [], quantity: 1 }],
     });
 
@@ -44,6 +46,8 @@ describe('Payment Security & Fraud Defenses', () => {
       type: 'DINE_IN',
       tableToken,
       paymentMethod: 'UPI',
+      customerName: 'Test Customer',
+      customerPhone: '9876543210',
       items: [{ menuItemId: testItemId, addOnIds: [], quantity: 1 }],
     });
 
@@ -78,6 +82,8 @@ describe('Payment Security & Fraud Defenses', () => {
       type: 'DINE_IN',
       tableToken,
       paymentMethod: 'UPI',
+      customerName: 'Customer One',
+      customerPhone: '9876543210',
       items: [{ menuItemId: testItemId, addOnIds: [], quantity: 1 }],
     });
 
@@ -88,6 +94,8 @@ describe('Payment Security & Fraud Defenses', () => {
       type: 'DINE_IN',
       tableToken,
       paymentMethod: 'UPI',
+      customerName: 'Customer Two',
+      customerPhone: '9876543210',
       items: [{ menuItemId: testItemId, addOnIds: [], quantity: 1 }],
     });
 

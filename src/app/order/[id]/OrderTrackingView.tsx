@@ -489,15 +489,15 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
         {/* 1. Big Order Number Token Card */}
         <div className="p-6 rounded-3xl bg-white border border-neutral-200/80 text-center space-y-3 shadow-sm">
           <div className="inline-flex items-center gap-2 py-1 px-3 rounded-full bg-neutral-100 text-neutral-700 text-xs font-bold">
-            {order.type === 'DINE_IN' ? (
+            {order.customerName ? (
               <>
-                <Utensils className="w-3.5 h-3.5 text-amber-600" />
-                <span>Dine-in: Table #{order.tableNumber}</span>
+                <span className="text-amber-500 font-black">👤</span>
+                <span>Customer: {order.customerName}</span>
               </>
             ) : (
               <>
                 <ShoppingBag className="w-3.5 h-3.5 text-amber-600" />
-                <span>Takeaway Counter Order</span>
+                <span>Wrap Nation Order</span>
               </>
             )}
           </div>
@@ -559,14 +559,14 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
                 Live WhatsApp Tracking
               </h4>
               <p className="text-[11px] text-emerald-700 font-medium">
-                Receipt & live link sent to {order.customerPhone ? `+91 ${order.customerPhone}` : 'your phone'}.
+                Receipt & live link sent to WhatsApp for {order.customerPhone ? `+91 ${order.customerPhone}` : 'your phone'}.
               </p>
             </div>
           </div>
 
           <a
-            href={`https://api.whatsapp.com/send?phone=91${(order.customerPhone || '').replace(/\D/g, '')}&text=${encodeURIComponent(
-              `🌯 *Wrap Nation — Order #${order.orderNumber}* ⚡\n\nHi ${order.customerName || 'Customer'},\nYour order has been received!\n\n🔢 *Order Number:* #${order.orderNumber}\n💰 *Amount:* ${order.totalFormatted} (${order.paymentMethod})\n📍 *Track Live Status & View Bill:*\n${typeof window !== 'undefined' ? window.location.href : `https://wrapnation.vercel.app/order/${order.id}`}\n\nStaff will call out *Order #${order.orderNumber}* when food is ready!\nThank you for ordering with Wrap Nation!`
+            href={`https://api.whatsapp.com/send?phone=${(shop?.phone || '918125057086').replace(/\D/g, '')}&text=${encodeURIComponent(
+              `🌯 *Wrap Nation — Order #${order.orderNumber}* ⚡\n\nHi Wrap Nation! My order details:\n👤 *Customer:* ${order.customerName || 'Customer'}\n📱 *Phone:* ${order.customerPhone || ''}\n🔢 *Order Number:* #${order.orderNumber}\n💰 *Amount:* ${order.totalFormatted} (${order.paymentMethod})\n📍 *Track Live Status & View Bill:*\n${typeof window !== 'undefined' ? window.location.href : `https://wrapnation.vercel.app/order/${order.id}`}\n\nStaff will call out *Order #${order.orderNumber}* when food is ready!\nThank you for ordering with Wrap Nation!`
             )}`}
             target="_blank"
             rel="noopener noreferrer"

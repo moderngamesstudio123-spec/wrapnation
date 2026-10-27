@@ -23,6 +23,7 @@ interface TableQRData {
 
 export default function AdminTableQRsPage() {
   const [tables, setTables] = useState<TableQRData[]>([]);
+  const [masterMenuQr, setMasterMenuQr] = useState<{ orderUrl: string; qrDataUrl: string } | null>(null);
   const [takeawayQr, setTakeawayQr] = useState<{ orderUrl: string; qrDataUrl: string } | null>(
     null
   );
@@ -35,6 +36,7 @@ export default function AdminTableQRsPage() {
     fetch('/api/tables/qr')
       .then((res) => res.json())
       .then((data) => {
+        if (data.masterMenuQr) setMasterMenuQr(data.masterMenuQr);
         if (data.tables) setTables(data.tables);
         if (data.takeaway) setTakeawayQr(data.takeaway);
         if (data.shopName) setShopName(data.shopName);
@@ -115,6 +117,68 @@ export default function AdminTableQRsPage() {
           <span>{statusMessage}</span>
         </div>
       )}
+
+      {/* Hero: Master Single Menu QR Standee (For All Tables) */}
+      <div className="p-6 rounded-3xl bg-linear-to-br from-amber-50 to-orange-50 border-2 border-amber-300 shadow-md space-y-4">
+        <div className="no-print flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <span className="text-[11px] font-black uppercase tracking-wider text-amber-800 bg-amber-200/60 px-3 py-1 rounded-full">
+              Single QR for Everyone (No Table Numbers Needed)
+            </span>
+            <h2 className="text-xl font-black text-neutral-950 mt-1">
+              Wrap Nation Master Menu QR Standee
+            </h2>
+            <p className="text-xs text-neutral-600 font-medium">
+              One single QR code for the entire restaurant. When scanned, it directly opens the menu without table selection.
+            </p>
+          </div>
+
+          <button
+            onClick={() => window.print()}
+            className="flex items-center gap-2 py-2.5 px-5 rounded-2xl bg-amber-400 hover:bg-amber-300 active:bg-amber-500 text-neutral-950 font-black text-xs uppercase tracking-wider shadow-md transition cursor-pointer self-start sm:self-auto"
+          >
+            <Printer className="w-4 h-4" />
+            <span>Print Standee Flyer</span>
+          </button>
+        </div>
+
+        {/* Standee Card */}
+        {masterMenuQr && (
+          <div className="a6-sticker-sheet max-w-xs mx-auto bg-neutral-950 text-white p-7 rounded-3xl shadow-2xl text-center border-4 border-amber-400 space-y-4">
+            <div className="space-y-1">
+              <span className="text-2xl">⚡</span>
+              <h3 className="text-2xl font-black text-amber-400 uppercase tracking-tight">
+                {shopName}
+              </h3>
+              <p className="text-[11px] text-neutral-300 font-bold uppercase tracking-widest">
+                Crispy Wraps & Burgers
+              </p>
+            </div>
+
+            <div className="p-4 bg-white rounded-2xl shadow-xl mx-auto inline-block border-2 border-neutral-100">
+              <Image
+                src={masterMenuQr.qrDataUrl}
+                alt="Master Menu QR"
+                width={220}
+                height={220}
+                className="w-52 h-52 object-contain"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <p className="text-base font-black text-white">
+                SCAN TO VIEW MENU & ORDER
+              </p>
+              <div className="inline-flex items-center gap-2 py-1 px-3 rounded-full bg-amber-400 text-neutral-950 font-black text-[11px]">
+                <span>Pay via UPI or Cash</span>
+              </div>
+              <p className="text-[10px] text-neutral-400 pt-1">
+                Live order tracking on WhatsApp with Order #XYZ
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* 1. Live Table Occupancy Management Grid (No-Print) */}
       <div className="no-print space-y-3">
