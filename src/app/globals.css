@@ -89,4 +89,14 @@
     border: 2px dashed #999 !important;
     padding: 10mm !important;
   }
+
+  /* Printable Financial Audit Report */
+  table {
+    page-break-inside: auto;
+  }
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
 }
+

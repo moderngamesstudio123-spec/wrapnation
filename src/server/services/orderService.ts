@@ -1,6 +1,7 @@
 import prisma from '@/lib/db';
 import crypto from 'crypto';
 import { verifyTableToken } from '@/lib/security/hmac';
+import { getIstStartOfDay } from '@/lib/dateUtils';
 import { getSettings, isShopOpen } from './settingService';
 import { queueOrderPrintJobs } from './printerService';
 import { sendOrderConfirmedNotification, sendOrderReadyNotification } from './whatsappService';
@@ -161,9 +162,8 @@ export async function createOrder(params: CreateOrderParams, ip?: string) {
   }
   const orderTotalPaise = orderSubtotalPaise + orderTaxPaise;
 
-  // 5. Generate daily sequential order number and takeaway token
-  const startOfDay = new Date();
-  startOfDay.setHours(0, 0, 0, 0);
+  // 5. Generate daily sequential order number and takeaway token strictly from 12:00 AM IST midnight
+  const startOfDay = getIstStartOfDay();
 
   const fallbackStats = getMaxFallbackDailyOrderStats(startOfDay);
 

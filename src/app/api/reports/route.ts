@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const dateStr = searchParams.get('date');
-  const targetDate = dateStr ? new Date(dateStr) : new Date();
+  const targetDate = dateStr ? new Date(`${dateStr}T12:00:00+05:30`) : new Date();
 
   const report = await getDailyReport(targetDate);
   return NextResponse.json({ report });

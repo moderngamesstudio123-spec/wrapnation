@@ -48,7 +48,7 @@ const TMP_ORDERS_FILE = path.join(
 );
 
 function getTodayKey(): string {
-  return new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD in local time
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }); // YYYY-MM-DD in IST
 }
 
 function syncOrdersFromFile() {

@@ -13,10 +13,10 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const dateStr = searchParams.get('date');
-  const targetDate = dateStr ? new Date(dateStr) : new Date();
+  const targetDate = dateStr ? new Date(`${dateStr}T12:00:00+05:30`) : new Date();
 
   const csv = await exportOrdersCsv(targetDate);
-  const filename = `wrapnation_sales_${targetDate.toISOString().split('T')[0]}.csv`;
+  const filename = `wrapnation_sales_${dateStr || 'today'}.csv`;
 
   return new Response(csv, {
     headers: {
