@@ -535,9 +535,9 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
               </span>
             )}
             {isCompleted && (
-              <span className="inline-flex items-center gap-1.5 py-1.5 px-4 rounded-full bg-neutral-100 border border-neutral-200 text-neutral-700 text-xs font-black uppercase tracking-wider">
+              <span className="inline-flex items-center gap-1.5 py-1.5 px-4 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-900 text-xs font-black uppercase tracking-wider shadow-xs">
                 <CheckCheck className="w-4 h-4 text-emerald-600" />
-                <span>Order Completed</span>
+                <span>Order Completed & Delivered! 🌯</span>
               </span>
             )}
             {isCancelled && (
@@ -547,6 +547,33 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
             )}
           </div>
         </div>
+
+        {/* Order Delivered Celebration Card */}
+        {isCompleted && (
+          <div className="p-4 rounded-2xl bg-linear-to-r from-emerald-600 to-teal-700 text-white shadow-md text-center space-y-2">
+            <div className="text-2xl">🎉🌯</div>
+            <h3 className="text-base font-black">Food Delivered! Enjoy Your Meal!</h3>
+            <p className="text-xs text-emerald-100 leading-relaxed">
+              Thank you for ordering with Wrap Nation. Need extra dips, drinks, or another wrap?
+            </p>
+            <div className="pt-1 flex items-center justify-center gap-2">
+              <a
+                href="/menu"
+                className="py-2 px-3.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-neutral-950 font-black text-xs shadow-xs transition"
+              >
+                Order More ⚡
+              </a>
+              <a
+                href="https://share.google/K02BROH8ES5iuiEmh"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="py-2 px-3.5 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs transition"
+              >
+                ⭐ Rate on Google
+              </a>
+            </div>
+          </div>
+        )}
 
         {/* Instant WhatsApp Order Updates & Live Tracking Card */}
         <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-300 shadow-xs space-y-2.5">

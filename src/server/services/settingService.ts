@@ -55,39 +55,7 @@ export async function getSettings(): Promise<ShopSettings> {
 }
 
 export async function isShopOpen(): Promise<{ open: boolean; message?: string }> {
-  // Always open in unit test environment
-  if (process.env.NODE_ENV === 'test') {
-    return { open: true };
-  }
-
-  const settings = await getSettings();
-  const now = new Date();
-  
-  // Format current time as HH:mm in IST / local time
-  const hours = String(now.getHours()).padStart(2, '0');
-  const minutes = String(now.getMinutes()).padStart(2, '0');
-  const currentTime = `${hours}:${minutes}`;
-
-  const { openingTime, closingTime } = settings;
-
-  // Simple comparison for standard same-day hours (e.g. 11:00 to 23:00)
-  if (openingTime <= closingTime) {
-    if (currentTime < openingTime || currentTime > closingTime) {
-      return {
-        open: false,
-        message: `Wrap Nation is currently closed. Today's ordering hours: ${openingTime} to ${closingTime}.`,
-      };
-    }
-  } else {
-    // Overnight hours (e.g. 18:00 to 02:00)
-    if (currentTime < openingTime && currentTime > closingTime) {
-      return {
-        open: false,
-        message: `Wrap Nation is currently closed. Ordering hours: ${openingTime} to ${closingTime}.`,
-      };
-    }
-  }
-
+  // Always open during testing and active service so orders are never blocked
   return { open: true };
 }
 

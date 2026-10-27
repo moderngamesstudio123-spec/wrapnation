@@ -526,13 +526,48 @@ export default function AdminLiveOrdersPage() {
                       </button>
                     </div>
                   ) : order.status === 'READY' ? (
-                    <button
-                      onClick={() => handleUpdateStatus(order.id, 'COMPLETED')}
-                      className="w-full py-3 px-4 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-amber-400 font-black text-xs uppercase tracking-wider shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
-                    >
-                      <CheckCheck className="w-4 h-4" />
-                      <span>Complete & Deliver</span>
-                    </button>
+                    <div className="space-y-2">
+                      <button
+                        onClick={() => handleUpdateStatus(order.id, 'COMPLETED')}
+                        className="w-full py-3 px-4 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-amber-400 font-black text-xs uppercase tracking-wider shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <CheckCheck className="w-4 h-4" />
+                        <span>Complete & Deliver</span>
+                      </button>
+                      {order.customerPhone && (
+                        <a
+                          href={`https://wa.me/91${order.customerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(
+                            `🌯 *Wrap Nation — Order Ready for Pickup!* ⚡\n\nHi ${order.customerName || 'Customer'},\nYour *Order #${order.orderNumber}* is fresh & packed ready!\n\nPlease collect your food from the counter.\nThank you!`
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full py-2 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-800 font-bold text-[11px] transition flex items-center justify-center gap-1.5 shadow-2xs"
+                        >
+                          <span>💬 Send &ldquo;Order Ready&rdquo; on WhatsApp</span>
+                        </a>
+                      )}
+                    </div>
+                  ) : order.status === 'COMPLETED' ? (
+                    <div className="space-y-1.5">
+                      <div className="py-2 px-3 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-bold flex items-center justify-between">
+                        <span className="flex items-center gap-1.5">
+                          <CheckCheck className="w-4 h-4 text-emerald-600" />
+                          <span>Order Delivered</span>
+                        </span>
+                        {order.customerPhone && (
+                          <a
+                            href={`https://wa.me/91${order.customerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(
+                              `🌯 *Wrap Nation — Order Delivered!* ⚡\n\nHi ${order.customerName || 'Customer'},\nYour *Order #${order.orderNumber}* has been served & delivered!\n\nThank you for visiting Wrap Nation! We hope you loved your fresh crispy wraps! 🌯\n\n⭐ Had a great meal? Leave us a review on Google Maps:\nhttps://share.google/K02BROH8ES5iuiEmh`
+                            )}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] bg-emerald-600 hover:bg-emerald-700 text-white py-1.5 px-3 rounded-lg font-black transition flex items-center gap-1 shadow-2xs cursor-pointer"
+                          >
+                            <span>WhatsApp Delivery Msg 💬</span>
+                          </a>
+                        )}
+                      </div>
+                    </div>
                   ) : null}
 
                   {/* Secondary Actions: Reprint Slip */}
