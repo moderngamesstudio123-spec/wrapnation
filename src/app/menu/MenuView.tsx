@@ -99,9 +99,7 @@ export default function MenuView({
     setActiveCategorySlug(slug);
     const element = sectionRefs.current[slug];
     if (element) {
-      const yOffset = -140; // account for sticky header & tabs
-      const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
-      window.scrollTo({ top: y, behavior: 'smooth' });
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
 

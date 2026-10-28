@@ -586,22 +586,31 @@ export default function OrderTrackingView({ orderId }: OrderTrackingViewProps) {
                 Live WhatsApp Tracking
               </h4>
               <p className="text-[11px] text-emerald-700 font-medium">
-                Receipt & live link sent to WhatsApp for {order.customerPhone ? `+91 ${order.customerPhone}` : 'your phone'}.
+                Receipt & live link sent to your number {order.customerPhone ? `(+91 ${order.customerPhone.replace(/\D/g, '').slice(-10)})` : ''}.
               </p>
             </div>
           </div>
 
-          <a
-            href={`https://api.whatsapp.com/send?phone=${(shop?.phone || '918125057086').replace(/\D/g, '')}&text=${encodeURIComponent(
-              `🌯 *Wrap Nation — Order #${order.orderNumber}* ⚡\n\nHi Wrap Nation! My order details:\n👤 *Customer:* ${order.customerName || 'Customer'}\n📱 *Phone:* ${order.customerPhone || ''}\n🔢 *Order Number:* #${order.orderNumber}\n💰 *Amount:* ${order.totalFormatted} (${order.paymentMethod})\n📍 *Track Live Status & View Bill:*\n${typeof window !== 'undefined' ? window.location.href : `https://wrapnation.vercel.app/order/${order.id}`}\n\nStaff will call out *Order #${order.orderNumber}* when food is ready!\nThank you for ordering with Wrap Nation!`
-            )}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-black text-xs flex items-center justify-center gap-2 shadow-xs transition cursor-pointer"
-          >
-            <span>Open Order in WhatsApp</span>
-            <ExternalLink className="w-3.5 h-3.5" />
-          </a>
+          {(() => {
+            const rawPhone = order.customerPhone || '';
+            const custTargetPhone = rawPhone
+              ? (rawPhone.startsWith('91') ? rawPhone : `91${rawPhone}`).replace(/\D/g, '')
+              : (shop?.phone || '918125057086').replace(/\D/g, '');
+            const trackingHref = typeof window !== 'undefined' ? window.location.href : `https://wrapnation.vercel.app/order/${order.id}`;
+            const custWaText = `🌯 *Wrap Nation — Your Order #${order.orderNumber}* ⚡\n\nHi ${order.customerName || 'Customer'}!\nYour order has been received:\n\n🔢 *Order Calling Number:* #${order.orderNumber}\n💰 *Amount:* ${order.totalFormatted} (${order.paymentMethod})\n📍 *Track Live Status & View Bill:*\n${trackingHref}\n\n📢 Staff will call out *Order #${order.orderNumber}* when food is packed ready!\nThank you for ordering with Wrap Nation!`;
+
+            return (
+              <a
+                href={`https://api.whatsapp.com/send?phone=${custTargetPhone}&text=${encodeURIComponent(custWaText)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-black text-xs flex items-center justify-center gap-2 shadow-xs transition cursor-pointer"
+              >
+                <span>Save Bill on My WhatsApp {rawPhone ? `(+91 ${rawPhone.replace(/\D/g, '').slice(-10)})` : ''}</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            );
+          })()}
         </div>
 
         {/* 2. Step Progress Bar */}

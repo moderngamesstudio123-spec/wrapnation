@@ -19,8 +19,13 @@ export default function MenuItemCard({ item }: MenuItemCardProps) {
   const hasCustomizations = item.variants.length > 0 || item.addOnLinks.length > 0;
   const firstCartItem = items.find((i) => i.menuItemId === item.id);
 
-  const handleAddClick = () => {
+  const handleAddClick = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     if (!item.isAvailable) return;
+    if (hasCustomizations) {
+      setIsModalOpen(true);
+      return;
+    }
     addItem({
       id: item.id,
       name: item.name,
@@ -29,7 +34,8 @@ export default function MenuItemCard({ item }: MenuItemCardProps) {
     });
   };
 
-  const handleIncrement = () => {
+  const handleIncrement = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (firstCartItem) {
       updateQuantity(firstCartItem.key, 1);
     } else {
@@ -37,19 +43,30 @@ export default function MenuItemCard({ item }: MenuItemCardProps) {
     }
   };
 
-  const handleDecrement = () => {
+  const handleDecrement = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (firstCartItem) {
       updateQuantity(firstCartItem.key, -1);
+    }
+  };
+
+  const handleCardClick = () => {
+    if (!item.isAvailable) return;
+    if (hasCustomizations) {
+      setIsModalOpen(true);
+    } else if (cartQuantity === 0) {
+      handleAddClick();
     }
   };
 
   return (
     <>
       <div
-        className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-300 relative flex items-start justify-between gap-4 ${
+        onClick={handleCardClick}
+        className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-300 relative flex items-start justify-between gap-4 cursor-pointer select-none ${
           item.isAvailable
-            ? 'bg-white border-neutral-200/80 hover:border-neutral-300 shadow-sm hover:shadow-md'
-            : 'bg-neutral-100/70 border-neutral-200 opacity-60'
+            ? 'bg-white border-neutral-200/80 hover:border-amber-300 shadow-sm hover:shadow-md'
+            : 'bg-neutral-100/70 border-neutral-200 opacity-60 cursor-not-allowed'
         }`}
       >
         {/* Left Column: Details */}
@@ -159,7 +176,10 @@ export default function MenuItemCard({ item }: MenuItemCardProps) {
             {hasCustomizations && item.isAvailable && (
               <button
                 type="button"
-                onClick={() => setIsModalOpen(true)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsModalOpen(true);
+                }}
                 className="text-[10px] text-amber-700 hover:text-amber-900 font-bold block text-center mt-1 underline cursor-pointer hover:scale-105 transition"
               >
                 Customise ›

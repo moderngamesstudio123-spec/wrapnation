@@ -145,13 +145,26 @@ export async function createOrder(params: CreateOrderParams, ip?: string) {
   const order = await prisma.$transaction(async (tx) => {
     const dateKey = getIstTodayString();
     const isTakeaway = params.type === 'TAKEAWAY';
-    const c = await tx.dailyCounter.upsert({
-      where: { date: dateKey },
-      create: { date: dateKey, last: 101, takeaway: isTakeaway ? 1 : 0 },
-      update: { last: { increment: 1 }, ...(isTakeaway ? { takeaway: { increment: 1 } } : {}) },
-    });
+    let c = await tx.dailyCounter.findUnique({ where: { date: dateKey } });
+    if (!c) {
+      try {
+        c = await tx.dailyCounter.create({
+          data: { date: dateKey, last: 101, takeaway: isTakeaway ? 1 : 0 },
+        });
+      } catch {
+        c = await tx.dailyCounter.update({
+          where: { date: dateKey },
+          data: { last: { increment: 1 }, ...(isTakeaway ? { takeaway: { increment: 1 } } : {}) },
+        });
+      }
+    } else {
+      c = await tx.dailyCounter.update({
+        where: { date: dateKey },
+        data: { last: { increment: 1 }, ...(isTakeaway ? { takeaway: { increment: 1 } } : {}) },
+      });
+    }
     const orderNumber = c.last;
-    const takeawayToken = isTakeaway ? `T-${c.takeaway}` : null;
+    const takeawayToken = null; // Single unified calling number (Order #101, #102...) for all orders
 
     const newOrder = await tx.order.create({
       data: {

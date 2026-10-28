@@ -96,6 +96,24 @@ export default function AdminLiveOrdersPage() {
     } catch {}
   }, [soundEnabled]);
 
+  // Voice Announcement: Staff calls out order number to customers
+  const callOrderOutLoud = useCallback((orderNumber: number, customerName?: string | null) => {
+    playAudioChime();
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.cancel();
+        const text = customerName
+          ? `Order Number ${orderNumber}, ${customerName}, is ready for pickup!`
+          : `Order Number ${orderNumber} is ready for pickup!`;
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.9;
+        utterance.pitch = 1.0;
+        utterance.lang = 'en-IN';
+        window.speechSynthesis.speak(utterance);
+      } catch {}
+    }
+  }, [playAudioChime]);
+
   const executeFetch = useCallback(async () => {
     if (isFetchingRef.current) return;
     isFetchingRef.current = true;
@@ -214,8 +232,11 @@ export default function AdminLiveOrdersPage() {
     };
   }, [fetchOrders]);
 
-  const handleUpdateStatus = async (orderId: string, newStatus: string) => {
+  const handleUpdateStatus = async (orderId: string, newStatus: string, orderNumber?: number, customerName?: string | null) => {
     try {
+      if (newStatus === 'READY' && orderNumber) {
+        callOrderOutLoud(orderNumber, customerName);
+      }
       const res = await fetch(`/api/orders/${orderId}/status`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -444,8 +465,18 @@ export default function AdminLiveOrdersPage() {
                 <div className="space-y-2">
                   <div className="flex items-start justify-between">
                     <div>
-                      <div className="text-3xl font-black text-neutral-950 tracking-tight">
-                        {orderTokenLabel}
+                      <div className="flex items-center gap-2">
+                        <div className="text-3xl font-black text-amber-500 tracking-tight">
+                          #{order.orderNumber}
+                        </div>
+                        <button
+                          onClick={() => callOrderOutLoud(order.orderNumber, order.customerName)}
+                          className="py-1 px-2.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-black transition flex items-center gap-1 cursor-pointer shadow-2xs"
+                          title="Staff Pukaro Order"
+                        >
+                          <Volume2 className="w-3.5 h-3.5 text-amber-700" />
+                          <span>Pukaro</span>
+                        </button>
                       </div>
                       <div className="flex flex-col gap-1 mt-0.5">
                         <span className="text-xs font-bold text-neutral-800 flex items-center gap-1.5">
@@ -559,11 +590,11 @@ export default function AdminLiveOrdersPage() {
                   ) : order.status === 'PAID' || order.status === 'PREPARING' ? (
                     <div className="grid grid-cols-2 gap-2">
                       <button
-                        onClick={() => handleUpdateStatus(order.id, 'READY')}
+                        onClick={() => handleUpdateStatus(order.id, 'READY', order.orderNumber, order.customerName)}
                         className="py-3 px-3 rounded-xl bg-amber-400 hover:bg-amber-300 active:bg-amber-500 text-neutral-950 font-black text-xs uppercase tracking-wider shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
                       >
                         <Bell className="w-4 h-4 stroke-[3]" />
-                        <span>Ready</span>
+                        <span>Ready & Pukaro</span>
                       </button>
                       <button
                         onClick={() => handleUpdateStatus(order.id, 'COMPLETED')}
@@ -575,6 +606,13 @@ export default function AdminLiveOrdersPage() {
                     </div>
                   ) : order.status === 'READY' ? (
                     <div className="space-y-2">
+                      <button
+                        onClick={() => callOrderOutLoud(order.orderNumber, order.customerName)}
+                        className="w-full py-2.5 px-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-neutral-950 font-black text-xs uppercase tracking-wider shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <Volume2 className="w-4 h-4 text-neutral-950" />
+                        <span>📢 Pukaro Order #{order.orderNumber}</span>
+                      </button>
                       <button
                         onClick={() => handleUpdateStatus(order.id, 'COMPLETED')}
                         className="w-full py-3 px-4 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-amber-400 font-black text-xs uppercase tracking-wider shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"

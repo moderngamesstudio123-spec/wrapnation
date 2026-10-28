@@ -88,7 +88,7 @@ export default function AdminTableQRsPage() {
             <QrCode className="w-6 h-6 text-amber-500" />
           </h1>
           <p className="text-xs text-neutral-600 font-medium">
-            Live table occupancy management, anti-fraud HMAC tokens, and A6 printable stickers
+            Table QR tokens and A6 printable stickers for tables & counter
           </p>
         </div>
 
@@ -180,89 +180,6 @@ export default function AdminTableQRsPage() {
         )}
       </div>
 
-      {/* 1. Live Table Occupancy Management Grid (No-Print) */}
-      <div className="no-print space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-base font-black text-neutral-900 flex items-center gap-2">
-            <Users className="w-4 h-4 text-amber-500" />
-            <span>Live Table Occupancy Status</span>
-          </h2>
-          <div className="flex items-center gap-3 text-xs font-bold">
-            <span className="flex items-center gap-1.5 text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-              <span>Available ({availableCount})</span>
-            </span>
-            <span className="flex items-center gap-1.5 text-rose-700 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-200">
-              <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-              <span>Occupied ({occupiedCount})</span>
-            </span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-          {tables.map((t) => {
-            const isOcc = !!t.isOccupied;
-            return (
-              <div
-                key={t.tableNumber}
-                className={`p-4 rounded-2xl border transition shadow-xs flex flex-col justify-between ${
-                  isOcc
-                    ? 'bg-rose-50/60 border-rose-300 ring-1 ring-rose-200'
-                    : 'bg-white border-neutral-200 hover:border-amber-300'
-                }`}
-              >
-                <div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg font-black text-neutral-900">
-                      Table #{t.tableNumber}
-                    </span>
-                    <span
-                      className={`w-2.5 h-2.5 rounded-full ${
-                        isOcc ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500'
-                      }`}
-                    ></span>
-                  </div>
-
-                  <div className="mt-1">
-                    {isOcc ? (
-                      <div className="space-y-0.5">
-                        <span className="text-[11px] font-black text-rose-700 uppercase tracking-wider block">
-                          Occupied
-                        </span>
-                        {t.activeOrder && (
-                          <span className="text-[11px] font-bold text-neutral-700 block">
-                            Order #{t.activeOrder.orderNumber}
-                          </span>
-                        )}
-                      </div>
-                    ) : (
-                      <span className="text-[11px] font-bold text-emerald-700 uppercase tracking-wider block">
-                        Available
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="pt-3">
-                  {isOcc ? (
-                    <button
-                      onClick={() => handleVacateTable(t.tableNumber)}
-                      disabled={vacatingTable === t.tableNumber}
-                      className="w-full py-1.5 px-2 rounded-xl bg-white hover:bg-rose-100 border border-rose-300 text-rose-700 font-black text-[11px] shadow-2xs transition cursor-pointer"
-                    >
-                      {vacatingTable === t.tableNumber ? 'Vacating...' : 'Vacate Table'}
-                    </button>
-                  ) : (
-                    <span className="text-[10px] text-neutral-400 font-semibold block text-center">
-                      Ready for guests
-                    </span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
 
       {/* Security Note Banner */}
       <div className="no-print p-4 rounded-2xl bg-white border border-amber-200 text-xs text-neutral-700 flex items-start gap-3 shadow-xs">

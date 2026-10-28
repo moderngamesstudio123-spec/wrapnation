@@ -127,25 +127,28 @@ export default function CartPage() {
       // Clear cart
       clearCart();
 
-      // Construct WhatsApp message with Order #XYZ and live tracking URL
-      const cleanTargetPhone = shopPhone || '918125057086';
+      // Construct WhatsApp message with Order #XYZ and live tracking URL to the CUSTOMER'S phone
+      const rawCustomerPhone = cleanPhone || phoneInput.trim();
+      const customerTargetPhone = rawCustomerPhone
+        ? (rawCustomerPhone.startsWith('91') ? rawCustomerPhone : `91${rawCustomerPhone}`).replace(/\D/g, '')
+        : (shopPhone || '918125057086').replace(/\D/g, '');
       const orderNum = data.order.orderNumber;
       const orderId = data.order.id;
-      const custName = data.order.customerName || nameInput.trim();
+      const custName = data.order.customerName || nameInput.trim() || 'Customer';
       const amount = `Rs ${Math.round(data.order.total / 100)}`;
       const payMode = paymentMethod === 'CASH' ? 'Cash at Counter' : 'UPI Online';
       const trackingUrl = `${window.location.origin}/order/${orderId}`;
 
-      const waMessage = `🌯 *Wrap Nation — Order #${orderNum}* ⚡\n\n` +
-        `Hi Wrap Nation! New order placed:\n` +
-        `👤 *Name:* ${custName}\n` +
-        `📱 *Mobile:* ${cleanPhone}\n` +
-        `🔢 *Order Number:* #${orderNum}\n` +
-        `💰 *Amount:* ${amount} (${payMode})\n\n` +
-        `📍 *Track Live Status:*\n${trackingUrl}\n\n` +
-        `Staff will call out Order #${orderNum} when ready!`;
+      const waMessage = `🌯 *Wrap Nation — Your Order #${orderNum}* ⚡\n\n` +
+        `Hi ${custName},\n` +
+        `Your order has been received!\n\n` +
+        `🔢 *Order Calling Number:* #${orderNum}\n` +
+        `💰 *Total Amount:* ${amount} (${payMode})\n\n` +
+        `📍 *View Bill & Track Live:*\n${trackingUrl}\n\n` +
+        `📢 Staff will call out *Order #${orderNum}* at counter when food is ready!\n` +
+        `Thank you for ordering with Wrap Nation!`;
 
-      const whatsappUrl = `https://api.whatsapp.com/send?phone=${cleanTargetPhone}&text=${encodeURIComponent(waMessage)}`;
+      const whatsappUrl = `https://api.whatsapp.com/send?phone=${customerTargetPhone}&text=${encodeURIComponent(waMessage)}`;
 
       // Open WhatsApp automatically with pre-filled order details
       try {

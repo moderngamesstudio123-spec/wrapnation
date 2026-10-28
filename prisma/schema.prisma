@@ -3,9 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
 enum Role {
@@ -102,7 +101,7 @@ model MenuItem {
   categoryId  String
   category    Category        @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   name        String
-  description String?
+  description String?         @db.Text
   basePrice   Int             // in paise (e.g. 13000 = Rs 130.00)
   isVeg       Boolean         @default(false)
   isAvailable Boolean         @default(true)
@@ -200,9 +199,9 @@ model OrderItem {
   variantName String?      // Snapshot
   unitPrice   Int          // Snapshot in paise
   quantity    Int
-  addOnsJson  String       // Snapshot JSON array
+  addOnsJson  String       @db.Text // Snapshot JSON array
   subtotal    Int          // Snapshot in paise
-  notes       String?
+  notes       String?      @db.Text
   createdAt   DateTime     @default(now())
 
   @@index([orderId])
@@ -218,7 +217,7 @@ model Payment {
   utr           String?       @unique // Prevents duplicate UTR reuse
   confirmedById String?
   confirmedBy   User?         @relation("ConfirmedByStaff", fields: [confirmedById], references: [id])
-  notes         String?
+  notes         String?       @db.Text
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
@@ -233,9 +232,9 @@ model PrintJob {
   order       Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
   slipType    SlipType
   status      PrintJobStatus @default(PENDING)
-  payloadJson String         // Rendered receipt JSON
+  payloadJson String         @db.Text // Rendered receipt JSON
   attempts    Int            @default(0)
-  lastError   String?
+  lastError   String?        @db.Text
   createdAt   DateTime       @default(now())
   printedAt   DateTime?
 
@@ -249,10 +248,10 @@ model MessageLog {
   order          Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
   recipientPhone String
   templateName   String
-  payload        String
+  payload        String        @db.Text
   status         MessageStatus @default(PENDING)
   attempts       Int           @default(0)
-  error          String?
+  error          String?       @db.Text
   createdAt      DateTime      @default(now())
   sentAt         DateTime?
 
@@ -264,14 +263,14 @@ model TableQR {
   id            String   @id @default(uuid())
   tableNumber   Int      @unique
   signedToken   String   @unique
-  qrCodeDataUrl String?
+  qrCodeDataUrl String?  @db.LongText
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
 
 model Setting {
   key         String   @id
-  value       String
+  value       String   @db.Text
   description String?
   updatedAt   DateTime @updatedAt
 }
@@ -282,7 +281,7 @@ model AuditLog {
   user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   action    String
   resource  String
-  details   String?  // JSON
+  details   String?  @db.Text // JSON
   ipAddress String?
   userAgent String?
   createdAt DateTime @default(now())

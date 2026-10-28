@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { getPublicMenu } from '@/server/services/menuService';
 import VegBadge from '@/components/customer/VegBadge';
 import { formatPaise } from '@/lib/format';
 import {
@@ -217,7 +216,8 @@ export default function ManualBillingPage() {
             {displayedItems.map((item) => (
               <div
                 key={item.id}
-                className="p-3.5 rounded-2xl bg-white border border-neutral-200/90 shadow-xs flex flex-col justify-between gap-2.5 hover:border-amber-400 transition"
+                onClick={() => addToCart(item)}
+                className="p-3.5 rounded-2xl bg-white border border-neutral-200/90 shadow-xs flex flex-col justify-between gap-2.5 hover:border-amber-400 transition cursor-pointer select-none"
               >
                 <div className="space-y-1">
                   <div className="flex items-center gap-1.5">
@@ -229,7 +229,7 @@ export default function ManualBillingPage() {
                   </div>
                 </div>
 
-                <div className="space-y-1 pt-1">
+                <div className="space-y-1 pt-1" onClick={(e) => e.stopPropagation()}>
                   <button
                     onClick={() => addToCart(item)}
                     className="w-full py-1.5 px-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-neutral-950 font-black text-xs shadow-xs transition cursor-pointer"
