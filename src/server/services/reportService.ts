@@ -1,6 +1,6 @@
 import prisma from '@/lib/db';
 import crypto from 'crypto';
-import { PaymentStatus, PaymentMethod } from '@prisma/client';
+import { PaymentStatus } from '@prisma/client';
 import { formatPaise } from '@/lib/format';
 import {
   getIstStartOfDay,
@@ -9,7 +9,6 @@ import {
   formatIstDateFull,
   getIstTodayString,
 } from '@/lib/dateUtils';
-import { getAllFallbackOrders } from './orderStore';
 
 export interface OrderLedgerItem {
   id: string;
@@ -69,10 +68,10 @@ export async function getDailyReport(targetDate: Date = new Date()): Promise<Dai
   const endOfDay = getIstEndOfDay(targetDate);
   const dateStr = getIstTodayString(targetDate);
 
-  // 1. Fetch orders from Prisma database
-  let dbOrders: any[] = [];
+  // 1. Fetch orders strictly from Prisma database
+  let allDayOrders: any[] = [];
   try {
-    dbOrders = await prisma.order.findMany({
+    allDayOrders = await prisma.order.findMany({
       where: {
         createdAt: { gte: startOfDay, lte: endOfDay },
       },
@@ -83,29 +82,11 @@ export async function getDailyReport(targetDate: Date = new Date()): Promise<Dai
       orderBy: { orderNumber: 'asc' },
     });
   } catch (err) {
-    console.warn('Database query warning in getDailyReport, reading fallback store:', err);
+    console.error('[getDailyReport] Database query failed:', err);
+    throw err;
   }
 
-  // 2. Fetch resilient fallback orders for the day and merge (deduplicate by id)
-  const allFallback = await getAllFallbackOrders();
-  const fallbackOrders = allFallback.filter((o) => {
-    const oDate = new Date(o.createdAt);
-    return oDate >= startOfDay && oDate <= endOfDay;
-  });
-
-  const mergedOrderMap = new Map<string, any>();
-  for (const o of fallbackOrders) {
-    mergedOrderMap.set(o.id, o);
-  }
-  for (const o of dbOrders) {
-    mergedOrderMap.set(o.id, o); // Database orders take precedence
-  }
-
-  const allDayOrders = Array.from(mergedOrderMap.values()).sort(
-    (a, b) => a.orderNumber - b.orderNumber
-  );
-
-  // 3. Precise Financial Calculations (Strict Integer Paise - Zero Float Drift)
+  // 2. Precise Financial Calculations (Strict Integer Paise - Zero Float Drift)
   let grossRevenuePaise = 0;
   let netRevenuePaise = 0;
   let taxPaise = 0;

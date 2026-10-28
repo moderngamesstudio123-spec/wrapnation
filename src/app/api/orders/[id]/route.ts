@@ -3,7 +3,6 @@ import prisma from '@/lib/db';
 import { getSettings } from '@/server/services/settingService';
 import { formatPaise } from '@/lib/format';
 import QRCode from 'qrcode';
-import { getFallbackOrder } from '@/server/services/orderStore';
 
 export async function GET(
   req: NextRequest,
@@ -21,26 +20,11 @@ export async function GET(
       },
     });
   } catch (err) {
-    console.warn('Database connection warning in /api/orders/[id]:', err);
-  }
-
-  if (!order) {
-    order = await getFallbackOrder(id);
-  }
-
-  if (!order) {
-    const rawCookie = req.cookies.get(`wn_order_${id}`)?.value || req.cookies.get('wn_last_order')?.value;
-    if (rawCookie) {
-      try {
-        const decoded = rawCookie.startsWith('%') ? decodeURIComponent(rawCookie) : rawCookie;
-        const parsed = JSON.parse(decoded);
-        if (parsed && (parsed.id === id || !id)) {
-          order = parsed;
-        }
-      } catch (cookieErr) {
-        console.warn('Failed to parse order cookie:', cookieErr);
-      }
-    }
+    console.error('[GET /api/orders/[id]] Database connection error:', err);
+    return NextResponse.json(
+      { error: 'Service temporarily unavailable, please try again' },
+      { status: 503 }
+    );
   }
 
   if (!order) {

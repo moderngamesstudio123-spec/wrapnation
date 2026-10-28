@@ -4,10 +4,19 @@ import { createOrderSchema } from '@/lib/validation/schemas';
 import { checkRateLimit } from '@/lib/security/rate-limit';
 import { requireAuth } from '@/lib/auth/session';
 import prisma from '@/lib/db';
-import { getAllFallbackOrders } from '@/server/services/orderStore';
+import { getIstStartOfDay } from '@/lib/dateUtils';
+import { OrderStatus, Prisma } from '@prisma/client';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
+
+const KNOWN_BUSINESS_ERRORS = [
+  'Shop is currently closed',
+  'Please provide customer name and 10-digit mobile number',
+  'One or more selected items are currently unavailable',
+  'Invalid or unavailable variant selected',
+  'Invalid or unavailable add-on selected',
+];
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1';
@@ -83,18 +92,10 @@ export async function POST(req: NextRequest) {
     });
 
     try {
-      const serialized = JSON.stringify(order);
-      res.cookies.set(`wn_order_${order.id}`, serialized, {
+      res.cookies.set('wn_last_order_id', order.id, {
         path: '/',
         httpOnly: true,
-        secure: true,
-        maxAge: 86400,
-        sameSite: 'lax',
-      });
-      res.cookies.set('wn_last_order', serialized, {
-        path: '/',
-        httpOnly: true,
-        secure: true,
+        secure: process.env.NODE_ENV === 'production',
         maxAge: 86400,
         sameSite: 'lax',
       });
@@ -102,8 +103,18 @@ export async function POST(req: NextRequest) {
 
     return res;
   } catch (err: unknown) {
+    console.error('[POST /api/orders] Order creation error:', err);
     const message = err instanceof Error ? err.message : 'Failed to create order';
-    return NextResponse.json({ error: message }, { status: 400 });
+    const isBusinessError = KNOWN_BUSINESS_ERRORS.some((msg) => message.includes(msg));
+
+    if (isBusinessError) {
+      return NextResponse.json({ error: message }, { status: 400 });
+    }
+
+    return NextResponse.json(
+      { error: 'Service temporarily unavailable, please try again' },
+      { status: 503 }
+    );
   }
 }
 
@@ -117,19 +128,31 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const statusParam = searchParams.get('status');
 
-  // Fetch today's orders or active orders
-  const startOfDay = new Date();
-  startOfDay.setHours(0, 0, 0, 0);
+  // Fetch today's orders (IST midnight) OR active orders regardless of date
+  const startOfDay = getIstStartOfDay();
+  const activeStatuses: OrderStatus[] = [
+    OrderStatus.AWAITING_PAYMENT,
+    OrderStatus.PAID,
+    OrderStatus.PREPARING,
+    OrderStatus.READY,
+  ];
 
-  const whereClause: Record<string, unknown> = {
-    createdAt: { gte: startOfDay },
-  };
+  const orConditions: Prisma.OrderWhereInput[] = [
+    { createdAt: { gte: startOfDay } },
+    { status: { in: activeStatuses } },
+  ];
 
-  if (statusParam) {
-    whereClause.status = statusParam;
-  }
+  const whereClause: Prisma.OrderWhereInput = statusParam
+    ? {
+        AND: [
+          { OR: orConditions },
+          { status: statusParam as OrderStatus },
+        ],
+      }
+    : {
+        OR: orConditions,
+      };
 
-  let dbOrders: any[] = [];
   try {
     const orders = await prisma.order.findMany({
       where: whereClause,
@@ -138,39 +161,21 @@ export async function GET(req: NextRequest) {
         payments: true,
       },
       orderBy: { createdAt: 'desc' },
-      take: 100,
+      take: 200,
     });
-    dbOrders = orders;
+
+    return NextResponse.json(
+      { orders },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          Pragma: 'no-cache',
+          Expires: '0',
+        },
+      }
+    );
   } catch (err) {
-    console.warn('Database connection warning in GET /api/orders:', err);
+    console.error('[GET /api/orders] Database unavailable error:', err);
+    return NextResponse.json({ error: 'DB unavailable' }, { status: 503 });
   }
-
-  // Merge with resilient fallback orders store so staff dashboard ALWAYS sees live orders
-  const fallbackOrders = await getAllFallbackOrders();
-  const map = new Map<string, any>();
-  for (const o of fallbackOrders) {
-    map.set(o.id, o);
-  }
-  for (const o of dbOrders) {
-    map.set(o.id, o);
-  }
-
-  let finalOrders = Array.from(map.values()).sort(
-    (a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
-
-  if (statusParam) {
-    finalOrders = finalOrders.filter((o: any) => o.status === statusParam);
-  }
-
-  return NextResponse.json(
-    { orders: finalOrders },
-    {
-      headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-        Pragma: 'no-cache',
-        Expires: '0',
-      },
-    }
-  );
 }
