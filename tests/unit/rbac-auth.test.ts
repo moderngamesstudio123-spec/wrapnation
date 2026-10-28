@@ -3,7 +3,7 @@ import { requireAuth, requireOwner, createSession, SESSION_COOKIE_NAME } from '@
 import { Role } from '@prisma/client';
 import prisma from '@/lib/db';
 
-let mockCookieStore = new Map<string, string>();
+const mockCookieStore = new Map<string, string>();
 
 vi.mock('next/headers', () => ({
   cookies: vi.fn(async () => ({

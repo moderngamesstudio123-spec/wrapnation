@@ -116,6 +116,7 @@ export async function queueOrderPrintJobs(orderId: string): Promise<void> {
     items: kitchenItems,
     paperWidth,
   };
+  void kitchenPayload;
 
   // 2. Prepare Customer Bill Payload
   const billItems: BillItem[] = order.orderItems.map((item) => {
