@@ -59,9 +59,13 @@ export default function AdminLiveOrdersPage() {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [selectedOrderForPayment, setSelectedOrderForPayment] = useState<Order | null>(null);
   const [reprintingOrderId, setReprintingOrderId] = useState<string | null>(null);
+  const [isReconnecting, setIsReconnecting] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
 
   const knownOrderIdsRef = useRef<Set<string>>(new Set());
   const isInitialLoadRef = useRef<boolean>(true);
+  const isFetchingRef = useRef<boolean>(false);
+  const pendingFetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Synthesize sound alert using Web Audio API (zero audio file dependencies)
   const playAudioChime = useCallback(() => {
@@ -97,7 +101,9 @@ export default function AdminLiveOrdersPage() {
     } catch {}
   }, [soundEnabled]);
 
-  const fetchOrders = useCallback(async () => {
+  const executeFetch = useCallback(async () => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
     try {
       const res = await fetch('/api/orders', { cache: 'no-store' });
       if (res.ok) {
@@ -121,48 +127,70 @@ export default function AdminLiveOrdersPage() {
         // Store current known IDs
         incomingOrders.forEach((o) => knownOrderIdsRef.current.add(o.id));
         setOrders(incomingOrders);
+        setLastSyncTime(new Date());
+        setIsReconnecting(false);
+      } else {
+        // Keep last known orders, show reconnecting banner
+        setIsReconnecting(true);
       }
     } catch (err) {
       console.warn('Live orders fetch failed:', err);
+      // Keep last known orders, show reconnecting banner
+      setIsReconnecting(true);
     } finally {
+      isFetchingRef.current = false;
       setLoading(false);
     }
   }, [playAudioChime]);
 
+  // Debounce fetchOrders to collapse concurrent triggers (polling, visibility, SSE) into one
+  const fetchOrders = useCallback(() => {
+    if (pendingFetchTimeoutRef.current) {
+      clearTimeout(pendingFetchTimeoutRef.current);
+    }
+    pendingFetchTimeoutRef.current = setTimeout(() => {
+      executeFetch();
+    }, 150);
+  }, [executeFetch]);
+
   useEffect(() => {
     fetchOrders();
 
-    // Connect to Server-Sent Events for instant real-time feed
-    const eventSource = new EventSource('/api/orders/stream');
+    // Connect to Server-Sent Events as an optional accelerator
+    let eventSource: EventSource | null = null;
+    try {
+      eventSource = new EventSource('/api/orders/stream');
 
-    eventSource.onopen = () => {
-      fetchOrders();
-    };
+      eventSource.onopen = () => {
+        fetchOrders();
+      };
 
-    eventSource.onerror = () => {
-      // Re-fetch fallback on disconnect/reconnect
-      fetchOrders();
-    };
+      eventSource.onerror = () => {
+        // SSE is optional accelerator: polling remains the primary reliability mechanism
+        fetchOrders();
+      };
 
-    eventSource.addEventListener('NEW_ORDER', () => {
-      playAudioChime();
-      fetchOrders();
-    });
+      eventSource.addEventListener('NEW_ORDER', () => {
+        fetchOrders();
+      });
 
-    eventSource.addEventListener('ORDER_STATUS_CHANGED', () => {
-      fetchOrders();
-    });
+      eventSource.addEventListener('ORDER_STATUS_CHANGED', () => {
+        fetchOrders();
+      });
 
-    eventSource.addEventListener('PAYMENT_CONFIRMED', () => {
-      fetchOrders();
-    });
+      eventSource.addEventListener('PAYMENT_CONFIRMED', () => {
+        fetchOrders();
+      });
 
-    eventSource.addEventListener('CUSTOMER_UTR_HINT', () => {
-      fetchOrders();
-    });
+      eventSource.addEventListener('CUSTOMER_UTR_HINT', () => {
+        fetchOrders();
+      });
+    } catch (e) {
+      console.warn('SSE initialization failed, relying on polling:', e);
+    }
 
-    // 3.5s tight poll fallback to guarantee orders never lag on kitchen screen
-    const pollInterval = setInterval(fetchOrders, 3500);
+    // 3000ms tight polling as primary reliability mechanism
+    const pollInterval = setInterval(fetchOrders, 3000);
 
     // Refresh instantly when staff returns to tab or wakes mobile screen
     const handleVisibilityChange = () => {
@@ -174,12 +202,17 @@ export default function AdminLiveOrdersPage() {
     window.addEventListener('focus', fetchOrders);
 
     return () => {
-      eventSource.close();
+      if (eventSource) {
+        eventSource.close();
+      }
       clearInterval(pollInterval);
+      if (pendingFetchTimeoutRef.current) {
+        clearTimeout(pendingFetchTimeoutRef.current);
+      }
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', fetchOrders);
     };
-  }, [fetchOrders, playAudioChime]);
+  }, [fetchOrders]);
 
   const handleUpdateStatus = async (orderId: string, newStatus: string) => {
     try {
@@ -269,6 +302,21 @@ export default function AdminLiveOrdersPage() {
           </button>
         </div>
       </div>
+
+      {/* Reconnecting banner if fetch failed */}
+      {isReconnecting && (
+        <div className="p-3 px-4 rounded-2xl bg-amber-50 border border-amber-300 text-amber-900 flex items-center justify-between text-xs font-semibold shadow-xs">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping shrink-0" />
+            <span>Reconnecting… showing last known orders</span>
+          </div>
+          {lastSyncTime && (
+            <span className="text-[11px] text-amber-700 font-mono">
+              Last synced: {lastSyncTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* 2. Metric Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
