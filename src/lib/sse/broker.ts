@@ -1,3 +1,10 @@
+/**
+ * In-memory Server-Sent Events (SSE) broker.
+ * NOTE: This is per-process only and acts as an optional accelerator for single-instance
+ * Node.js servers. On serverless hosting (e.g. Vercel), client polling is the primary source
+ * of reliability across distributed lambdas.
+ */
+
 type SSEListener = (data: string) => void;
 
 class SSEBroker {

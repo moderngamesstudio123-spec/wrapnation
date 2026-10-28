@@ -104,8 +104,37 @@ docker compose exec app npm run db:seed
 
 ---
 
+## ⏱️ Background Cron Job (Expiring Unpaid Orders)
+Unpaid orders older than the timeout (15 mins) are marked `EXPIRED` via `/api/cron/expire`:
+- **Vercel**: Pre-configured in `vercel.json` to trigger every 5 minutes automatically.
+- **VPS / Docker**: Add a crontab entry using curl with your `CRON_SECRET`:
+  ```bash
+  */5 * * * * curl -s -H "Authorization: Bearer <YOUR_CRON_SECRET>" https://yourdomain.com/api/cron/expire > /dev/null
+  ```
+
+---
+
+## ⚠️ Mandatory Security & Secret Rotation Notice
+> [!WARNING]
+> The Supabase DB password, `SESSION_SECRET`, `HMAC_SECRET`, and `PRINTER_AGENT_RAW_KEY` that existed in the previous `.env` **must be rotated immediately**, because that file was shared in an archive that also contained the `.git` directory history.
+>
+> Ensure `.env` is never committed to git (kept in `.gitignore`).
+
+---
+
+## 🌐 Supabase & Vercel Latency Optimization
+For production deployments in India:
+- **Supabase Project Region**: Select **Mumbai (`ap-south-1`)**
+- **Vercel Serverless Function Region**: Select **Mumbai (`bom1`)**
+- **Database Connection Strings**:
+  - `DATABASE_URL`: Use Supabase PgBouncer pooler URL with `?pgbouncer=true&connection_limit=1`
+  - `DIRECT_URL`: Use direct Supabase port `5432` URL for Prisma migrations.
+
+---
+
 ## 🔒 Security Documentation
 - [STRIDE Threat Model](file:///d:/Wrap%20Nation/docs/THREAT_MODEL.md)
 - [Security Architecture & Controls](file:///d:/Wrap%20Nation/docs/SECURITY.md)
 - [REST API Reference](file:///d:/Wrap%20Nation/docs/API.md)
 - [Deployment & Backup Guide](file:///d:/Wrap%20Nation/docs/DEPLOYMENT.md)
+
