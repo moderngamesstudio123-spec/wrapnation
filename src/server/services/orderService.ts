@@ -180,6 +180,9 @@ export async function createOrder(params: CreateOrderParams, ip?: string) {
     });
 
     return newOrder;
+  }, {
+    maxWait: 15000,
+    timeout: 30000,
   });
 
   // 6. Broadcast new order to Admin POS via SSE
@@ -312,6 +315,9 @@ export async function markOrderPaid(
     });
 
     return p;
+  }, {
+    maxWait: 15000,
+    timeout: 30000,
   });
 
   // 4. Trigger 80mm thermal slips printing ONLY AFTER verified payment!
