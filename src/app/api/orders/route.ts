@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const order = await createOrder(parseResult.data, ip);
-    const orderItems = (order.orderItems || []).map((i: any) => ({
+    const orderItems = (order.orderItems || []).map((i) => ({
       id: i.id,
       itemName: i.itemName,
       variantName: i.variantName || null,

@@ -10,15 +10,10 @@ import {
   CheckCheck,
   RefreshCw,
   Printer,
-  ShoppingBag,
-  Utensils,
   Volume2,
   VolumeX,
-  AlertCircle,
   FileText,
   DollarSign,
-  ArrowRight,
-  ShieldCheck,
 } from 'lucide-react';
 
 interface OrderItem {
@@ -55,12 +50,12 @@ interface Order {
 export default function AdminLiveOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [filter, setFilter] = useState<string>('ACTIVE');
-  const [loading, setLoading] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [selectedOrderForPayment, setSelectedOrderForPayment] = useState<Order | null>(null);
   const [reprintingOrderId, setReprintingOrderId] = useState<string | null>(null);
   const [isReconnecting, setIsReconnecting] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
+  const [currentTimeMs, setCurrentTimeMs] = useState<number>(() => Date.now());
 
   const knownOrderIdsRef = useRef<Set<string>>(new Set());
   const isInitialLoadRef = useRef<boolean>(true);
@@ -139,7 +134,6 @@ export default function AdminLiveOrdersPage() {
       setIsReconnecting(true);
     } finally {
       isFetchingRef.current = false;
-      setLoading(false);
     }
   }, [playAudioChime]);
 
@@ -201,11 +195,17 @@ export default function AdminLiveOrdersPage() {
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', fetchOrders);
 
+    // Refresh timer for relative order age
+    const clockInterval = setInterval(() => {
+      setCurrentTimeMs(Date.now());
+    }, 30000);
+
     return () => {
       if (eventSource) {
         eventSource.close();
       }
       clearInterval(pollInterval);
+      clearInterval(clockInterval);
       if (pendingFetchTimeoutRef.current) {
         clearTimeout(pendingFetchTimeoutRef.current);
       }
@@ -260,7 +260,7 @@ export default function AdminLiveOrdersPage() {
   });
 
   const getAgeMins = (createdAt: string): number => {
-    return Math.floor((Date.now() - new Date(createdAt).getTime()) / 60000);
+    return Math.max(0, Math.floor((currentTimeMs - new Date(createdAt).getTime()) / 60000));
   };
 
   return (

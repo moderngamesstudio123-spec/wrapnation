@@ -64,7 +64,6 @@ class SSEBroker {
 }
 
 declare global {
-  // eslint-disable-next-line no-var
   var __wrapNationSSEBroker: SSEBroker | undefined;
 }
 

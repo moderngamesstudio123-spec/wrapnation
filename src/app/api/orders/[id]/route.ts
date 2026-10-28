@@ -3,6 +3,14 @@ import prisma from '@/lib/db';
 import { getSettings } from '@/server/services/settingService';
 import { formatPaise } from '@/lib/format';
 import QRCode from 'qrcode';
+import { Prisma } from '@prisma/client';
+
+type OrderWithRelations = Prisma.OrderGetPayload<{
+  include: {
+    orderItems: true;
+    payments: true;
+  };
+}>;
 
 export async function GET(
   req: NextRequest,
@@ -10,7 +18,7 @@ export async function GET(
 ) {
   const { id } = await params;
 
-  let order: any = null;
+  let order: OrderWithRelations | null = null;
   try {
     order = await prisma.order.findUnique({
       where: { id },
@@ -92,9 +100,9 @@ export async function GET(
       expiresAt: order.expiresAt,
       completedAt: order.completedAt,
       createdAt: order.createdAt,
-      orderItems: (order.orderItems || []).map((item: any) => {
-        let addOns = Array.isArray(item.addOns) ? item.addOns : [];
-        if (!addOns.length && item.addOnsJson) {
+      orderItems: (order.orderItems || []).map((item) => {
+        let addOns: Array<{ name: string; price: number }> = [];
+        if (item.addOnsJson) {
           try {
             addOns = JSON.parse(item.addOnsJson);
           } catch {}

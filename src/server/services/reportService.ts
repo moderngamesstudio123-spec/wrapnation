@@ -69,7 +69,14 @@ export async function getDailyReport(targetDate: Date = new Date()): Promise<Dai
   const dateStr = getIstTodayString(targetDate);
 
   // 1. Fetch orders strictly from Prisma database
-  let allDayOrders: any[] = [];
+  let allDayOrders: Array<
+    import('@prisma/client').Prisma.OrderGetPayload<{
+      include: {
+        orderItems: true;
+        payments: true;
+      };
+    }>
+  > = [];
   try {
     allDayOrders = await prisma.order.findMany({
       where: {
@@ -141,7 +148,7 @@ export async function getDailyReport(targetDate: Date = new Date()): Promise<Dai
 
     // Build Itemized Audit Ledger Row
     const orderItemsList = order.orderItems || [];
-    const itemsSummary = orderItemsList.map((i: any) => `${i.quantity}× ${i.itemName}`).join(', ') || 'N/A';
+    const itemsSummary = orderItemsList.map((i) => `${i.quantity}× ${i.itemName}`).join(', ') || 'N/A';
     const utrRef = order.payments?.[0]?.utr || order.customerUtrHint || null;
 
     ordersList.push({
