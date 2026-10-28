@@ -50,7 +50,7 @@ async function main() {
       name: 'Shop Owner (Admin)',
       passwordHash: ownerPasswordHash,
       role: Role.OWNER,
-      mustChangePassword: true,
+      mustChangePassword: false,
     },
   });
 
@@ -62,7 +62,7 @@ async function main() {
       name: 'Counter Staff',
       passwordHash: staffPasswordHash,
       role: Role.STAFF,
-      mustChangePassword: true,
+      mustChangePassword: false,
     },
   });
   console.log('Demo accounts seeded (owner@wrapnation.com, staff@wrapnation.com).');
