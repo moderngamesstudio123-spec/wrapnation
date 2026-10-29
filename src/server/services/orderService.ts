@@ -145,24 +145,13 @@ export async function createOrder(params: CreateOrderParams, ip?: string) {
   const order = await prisma.$transaction(async (tx) => {
     const dateKey = getIstTodayString();
     const isTakeaway = params.type === 'TAKEAWAY';
-    let c = await tx.dailyCounter.findUnique({ where: { date: dateKey } });
-    if (!c) {
-      try {
-        c = await tx.dailyCounter.create({
-          data: { date: dateKey, last: 101, takeaway: isTakeaway ? 1 : 0 },
-        });
-      } catch {
-        c = await tx.dailyCounter.update({
-          where: { date: dateKey },
-          data: { last: { increment: 1 }, ...(isTakeaway ? { takeaway: { increment: 1 } } : {}) },
-        });
-      }
-    } else {
-      c = await tx.dailyCounter.update({
-        where: { date: dateKey },
-        data: { last: { increment: 1 }, ...(isTakeaway ? { takeaway: { increment: 1 } } : {}) },
-      });
-    }
+    // Atomic MySQL counter generation (eliminates race condition & duplicate key errors)
+    await tx.$executeRaw`
+      INSERT INTO DailyCounter (\`date\`, \`last\`, \`takeaway\`)
+      VALUES (${dateKey}, 101, ${isTakeaway ? 1 : 0})
+      ON DUPLICATE KEY UPDATE \`last\` = \`last\` + 1, \`takeaway\` = \`takeaway\` + ${isTakeaway ? 1 : 0}
+    `;
+    const c = await tx.dailyCounter.findUniqueOrThrow({ where: { date: dateKey } });
     const orderNumber = c.last;
     const takeawayToken = null; // Single unified calling number (Order #101, #102...) for all orders
 

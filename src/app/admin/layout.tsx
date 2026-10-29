@@ -1,19 +1,23 @@
 import React from 'react';
-import { requireAuth } from '@/lib/auth/session';
+import { getCurrentUser } from '@/lib/auth/session';
 import { redirect } from 'next/navigation';
-import AdminNav from './AdminNav';
-
+import AdminLayoutClient from './AdminLayoutClient';
+import { Role } from '@prisma/client';
 
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  let user;
-  try {
-    user = await requireAuth();
-  } catch {
+  const user = await getCurrentUser();
+
+  if (!user) {
     redirect('/login');
+  }
+
+  // Strict separation: If user is STAFF, redirect to dedicated Staff Orders board!
+  if (user.role === Role.STAFF) {
+    redirect('/staff/orders');
   }
 
   if (user.mustChangePassword) {
@@ -21,17 +25,14 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-neutral-900 flex flex-col">
-      <AdminNav
-        user={{
-          name: user.name,
-          email: user.email,
-          role: user.role,
-        }}
-      />
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6">
-        {children}
-      </main>
-    </div>
+    <AdminLayoutClient
+      user={{
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      }}
+    >
+      {children}
+    </AdminLayoutClient>
   );
 }

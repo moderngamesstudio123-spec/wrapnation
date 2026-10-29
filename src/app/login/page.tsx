@@ -31,6 +31,8 @@ export default function LoginPage() {
 
       if (data.user?.mustChangePassword) {
         router.replace('/change-password');
+      } else if (data.user?.role === 'STAFF') {
+        router.replace('/staff/orders');
       } else {
         router.replace('/admin');
       }

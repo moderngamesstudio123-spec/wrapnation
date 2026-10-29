@@ -1,692 +1,423 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import MarkPaidModal from '@/components/admin/MarkPaidModal';
-import { formatPaise } from '@/lib/format';
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import {
+  TrendingUp,
+  ShoppingBag,
+  Users,
+  UtensilsCrossed,
+  ArrowUpRight,
+  Calculator,
+  Eye,
+  CreditCard,
+  Banknote,
   Clock,
-  ChefHat,
-  Bell,
-  CheckCheck,
   RefreshCw,
-  Printer,
-  Volume2,
-  VolumeX,
-  FileText,
-  DollarSign,
+  Loader2,
+  Calendar,
 } from 'lucide-react';
 
-interface OrderItem {
-  id: string;
-  itemName: string;
-  variantName?: string | null;
-  unitPrice: number;
-  quantity: number;
-  subtotal: number;
-  addOnsJson?: string;
-  notes?: string | null;
+interface OverviewData {
+  totalSalesFormatted: string;
+  totalSalesPaise: number;
+  totalOrdersCount: number;
+  todaySalesFormatted: string;
+  todaySalesPaise: number;
+  todayOrdersCount: number;
+  todayPaidCount: number;
+  totalCustomersCount: number;
+  totalMenuItemsCount: number;
+  cashRevenueFormatted: string;
+  upiRevenueFormatted: string;
 }
 
-interface Order {
+interface PopularItem {
+  name: string;
+  quantity: number;
+  revenueFormatted: string;
+}
+
+interface RecentOrder {
   id: string;
   orderNumber: number;
-  takeawayToken?: string | null;
   type: 'DINE_IN' | 'TAKEAWAY';
-  tableNumber?: number | null;
-  status: 'AWAITING_PAYMENT' | 'PAID' | 'PREPARING' | 'READY' | 'COMPLETED' | 'CANCELLED' | 'EXPIRED';
-  paymentStatus: 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
-  paymentMethod: 'UPI' | 'CASH';
+  status: string;
+  paymentStatus: string;
+  paymentMethod: string;
   customerName?: string | null;
   customerPhone?: string | null;
-  customerUtrHint?: string | null;
-  cookingNote?: string | null;
-  subtotal: number;
-  tax: number;
-  total: number;
+  totalFormatted: string;
   createdAt: string;
-  orderItems: OrderItem[];
+  itemsSummary: string;
 }
 
-export default function AdminLiveOrdersPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [filter, setFilter] = useState<string>('ACTIVE');
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  const [selectedOrderForPayment, setSelectedOrderForPayment] = useState<Order | null>(null);
-  const [reprintingOrderId, setReprintingOrderId] = useState<string | null>(null);
-  const [isReconnecting, setIsReconnecting] = useState(false);
-  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
-  const [currentTimeMs, setCurrentTimeMs] = useState<number>(() => Date.now());
+export default function AdminDashboardPage() {
+  const [overview, setOverview] = useState<OverviewData | null>(null);
+  const [popularItems, setPopularItems] = useState<PopularItem[]>([]);
+  const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const knownOrderIdsRef = useRef<Set<string>>(new Set());
-  const isInitialLoadRef = useRef<boolean>(true);
-  const isFetchingRef = useRef<boolean>(false);
-  const pendingFetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const getGreeting = () => {
+    const hours = new Date().getHours();
+    if (hours < 12) return 'Good Morning';
+    if (hours < 17) return 'Good Afternoon';
+    return 'Good Evening';
+  };
 
-  // Synthesize sound alert using Web Audio API (zero audio file dependencies)
-  const playAudioChime = useCallback(() => {
-    if (!soundEnabled) return;
+  const fetchDashboardData = async () => {
     try {
-      const AudioContext = window.AudioContext || (window as unknown as { webkitAudioContext: typeof window.AudioContext }).webkitAudioContext;
-      if (!AudioContext) return;
-      const ctx = new AudioContext();
-
-      // First tone (800Hz)
-      const osc1 = ctx.createOscillator();
-      const gain1 = ctx.createGain();
-      osc1.type = 'sine';
-      osc1.frequency.setValueAtTime(800, ctx.currentTime);
-      gain1.gain.setValueAtTime(0.3, ctx.currentTime);
-      gain1.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
-      osc1.connect(gain1);
-      gain1.connect(ctx.destination);
-      osc1.start();
-      osc1.stop(ctx.currentTime + 0.25);
-
-      // Second tone (1050Hz)
-      const osc2 = ctx.createOscillator();
-      const gain2 = ctx.createGain();
-      osc2.type = 'sine';
-      osc2.frequency.setValueAtTime(1050, ctx.currentTime + 0.15);
-      gain2.gain.setValueAtTime(0.3, ctx.currentTime + 0.15);
-      gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
-      osc2.connect(gain2);
-      gain2.connect(ctx.destination);
-      osc2.start(ctx.currentTime + 0.15);
-      osc2.stop(ctx.currentTime + 0.5);
-    } catch {}
-  }, [soundEnabled]);
-
-  // Voice Announcement: Staff calls out order number to customers
-  const callOrderOutLoud = useCallback((orderNumber: number, customerName?: string | null) => {
-    playAudioChime();
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      try {
-        window.speechSynthesis.cancel();
-        const text = customerName
-          ? `Order Number ${orderNumber}, ${customerName}, is ready for pickup!`
-          : `Order Number ${orderNumber} is ready for pickup!`;
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 0.9;
-        utterance.pitch = 1.0;
-        utterance.lang = 'en-IN';
-        window.speechSynthesis.speak(utterance);
-      } catch {}
-    }
-  }, [playAudioChime]);
-
-  const executeFetch = useCallback(async () => {
-    if (isFetchingRef.current) return;
-    isFetchingRef.current = true;
-    try {
-      const res = await fetch('/api/orders', { cache: 'no-store' });
+      const res = await fetch('/api/dashboard');
       if (res.ok) {
         const data = await res.json();
-        const incomingOrders: Order[] = data.orders || [];
-
-        // Check if brand new order arrived (not present in previous set)
-        if (!isInitialLoadRef.current) {
-          const hasNewOrder = incomingOrders.some(
-            (o) =>
-              !knownOrderIdsRef.current.has(o.id) &&
-              (o.status === 'AWAITING_PAYMENT' || o.status === 'PAID')
-          );
-          if (hasNewOrder) {
-            playAudioChime();
-          }
-        } else {
-          isInitialLoadRef.current = false;
-        }
-
-        // Store current known IDs
-        incomingOrders.forEach((o) => knownOrderIdsRef.current.add(o.id));
-        setOrders(incomingOrders);
-        setLastSyncTime(new Date());
-        setIsReconnecting(false);
-      } else {
-        // Keep last known orders, show reconnecting banner
-        setIsReconnecting(true);
+        setOverview(data.overview);
+        setPopularItems(data.popularItems || []);
+        setRecentOrders(data.recentOrders || []);
       }
     } catch (err) {
-      console.warn('Live orders fetch failed:', err);
-      // Keep last known orders, show reconnecting banner
-      setIsReconnecting(true);
+      console.error('Failed to load dashboard:', err);
     } finally {
-      isFetchingRef.current = false;
+      setLoading(false);
+      setRefreshing(false);
     }
-  }, [playAudioChime]);
-
-  // Debounce fetchOrders to collapse concurrent triggers (polling, visibility, SSE) into one
-  const fetchOrders = useCallback(() => {
-    if (pendingFetchTimeoutRef.current) {
-      clearTimeout(pendingFetchTimeoutRef.current);
-    }
-    pendingFetchTimeoutRef.current = setTimeout(() => {
-      executeFetch();
-    }, 150);
-  }, [executeFetch]);
+  };
 
   useEffect(() => {
-    fetchOrders();
+    fetchDashboardData();
+    const interval = setInterval(fetchDashboardData, 20000); // 20s auto-refresh
+    return () => clearInterval(interval);
+  }, []);
 
-    // Connect to Server-Sent Events as an optional accelerator
-    let eventSource: EventSource | null = null;
-    try {
-      eventSource = new EventSource('/api/orders/stream');
-
-      eventSource.onopen = () => {
-        fetchOrders();
-      };
-
-      eventSource.onerror = () => {
-        // SSE is optional accelerator: polling remains the primary reliability mechanism
-        fetchOrders();
-      };
-
-      eventSource.addEventListener('NEW_ORDER', () => {
-        fetchOrders();
-      });
-
-      eventSource.addEventListener('ORDER_STATUS_CHANGED', () => {
-        fetchOrders();
-      });
-
-      eventSource.addEventListener('PAYMENT_CONFIRMED', () => {
-        fetchOrders();
-      });
-
-      eventSource.addEventListener('CUSTOMER_UTR_HINT', () => {
-        fetchOrders();
-      });
-    } catch (e) {
-      console.warn('SSE initialization failed, relying on polling:', e);
-    }
-
-    // 3000ms tight polling as primary reliability mechanism
-    const pollInterval = setInterval(fetchOrders, 3000);
-
-    // Refresh instantly when staff returns to tab or wakes mobile screen
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        fetchOrders();
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', fetchOrders);
-
-    // Refresh timer for relative order age
-    const clockInterval = setInterval(() => {
-      setCurrentTimeMs(Date.now());
-    }, 30000);
-
-    return () => {
-      if (eventSource) {
-        eventSource.close();
-      }
-      clearInterval(pollInterval);
-      clearInterval(clockInterval);
-      if (pendingFetchTimeoutRef.current) {
-        clearTimeout(pendingFetchTimeoutRef.current);
-      }
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', fetchOrders);
-    };
-  }, [fetchOrders]);
-
-  const handleUpdateStatus = async (orderId: string, newStatus: string, orderNumber?: number, customerName?: string | null) => {
-    try {
-      if (newStatus === 'READY' && orderNumber) {
-        callOrderOutLoud(orderNumber, customerName);
-      }
-      const res = await fetch(`/api/orders/${orderId}/status`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
-      });
-      if (res.ok) {
-        fetchOrders();
-      }
-    } catch {}
+  const handleManualRefresh = () => {
+    setRefreshing(true);
+    fetchDashboardData();
   };
 
-  const handleReprint = async (orderId: string) => {
-    setReprintingOrderId(orderId);
-    try {
-      await fetch(`/api/orders/${orderId}/reprint`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-    } catch {}
-    setTimeout(() => setReprintingOrderId(null), 1000);
-  };
-
-  // Metrics
-  const activeOrders = orders.filter(
-    (o) => o.status !== 'COMPLETED' && o.status !== 'CANCELLED' && o.status !== 'EXPIRED'
-  );
-  const awaitingPaymentCount = orders.filter((o) => o.status === 'AWAITING_PAYMENT').length;
-  const preparingCount = orders.filter(
-    (o) => o.status === 'PAID' || o.status === 'PREPARING'
-  ).length;
-  const readyCount = orders.filter((o) => o.status === 'READY').length;
-
-  const filteredOrders = orders.filter((o) => {
-    if (filter === 'ACTIVE') {
-      return o.status !== 'COMPLETED' && o.status !== 'CANCELLED' && o.status !== 'EXPIRED';
-    }
-    if (filter === 'AWAITING_PAYMENT') return o.status === 'AWAITING_PAYMENT';
-    if (filter === 'PREPARING') return o.status === 'PAID' || o.status === 'PREPARING';
-    if (filter === 'READY') return o.status === 'READY';
-    if (filter === 'COMPLETED') return o.status === 'COMPLETED';
-    return true;
-  });
-
-  const getAgeMins = (createdAt: string): number => {
-    return Math.max(0, Math.floor((currentTimeMs - new Date(createdAt).getTime()) / 60000));
-  };
+  if (loading && !overview) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 gap-3 text-neutral-500">
+        <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+        <p className="text-sm font-medium">Loading FoodScan dashboard...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      {/* 1. Header & Quick Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-8 animate-in fade-in duration-300">
+      {/* FoodScan Welcome Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-neutral-950 tracking-tight flex items-center gap-2">
-            <span>Live Kitchen & Orders Board</span>
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+          <h1 className="text-2xl sm:text-3xl font-black text-neutral-900 tracking-tight">
+            {getGreeting()}, <span className="text-amber-600">Admin</span>
           </h1>
-          <p className="text-xs text-neutral-600 font-medium">
-            Real-time SSE order stream • Auto-printing on 80mm thermal printer
+          <p className="text-xs sm:text-sm text-neutral-500 font-medium mt-1">
+            Wrap Nation Performance Overview & Live Statistics
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* Audio Chime Toggle */}
+        <div className="flex items-center gap-3">
           <button
-            onClick={() => setSoundEnabled(!soundEnabled)}
-            className={`p-2.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition shadow-xs cursor-pointer ${
-              soundEnabled
-                ? 'bg-amber-100 border-amber-300 text-amber-900'
-                : 'bg-white border-neutral-200 text-neutral-500 hover:bg-neutral-50'
-            }`}
-            title={soundEnabled ? 'Sound alert enabled' : 'Sound alert muted'}
+            onClick={handleManualRefresh}
+            disabled={refreshing}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-semibold shadow-xs transition"
           >
-            {soundEnabled ? <Volume2 className="w-4 h-4 text-amber-700" /> : <VolumeX className="w-4 h-4" />}
-            <span className="hidden sm:inline">{soundEnabled ? 'Chime On' : 'Chime Off'}</span>
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-amber-600' : ''}`} />
+            <span>{refreshing ? 'Updating...' : 'Refresh'}</span>
           </button>
 
-          {/* Refresh Button */}
-          <button
-            onClick={fetchOrders}
-            className="p-2.5 rounded-xl bg-white border border-neutral-200 hover:bg-amber-50/70 text-neutral-800 text-xs font-bold flex items-center gap-1.5 transition shadow-xs cursor-pointer"
+          <Link
+            href="/admin/billing"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-500 text-neutral-950 text-xs font-extrabold shadow-sm transition"
           >
-            <RefreshCw className="w-4 h-4" />
-            <span className="hidden sm:inline">Refresh</span>
-          </button>
+            <Calculator className="w-4 h-4 stroke-[2.5]" />
+            <span>POS Billing</span>
+          </Link>
         </div>
       </div>
 
-      {/* Reconnecting banner if fetch failed */}
-      {isReconnecting && (
-        <div className="p-3 px-4 rounded-2xl bg-amber-50 border border-amber-300 text-amber-900 flex items-center justify-between text-xs font-semibold shadow-xs">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping shrink-0" />
-            <span>Reconnecting… showing last known orders</span>
-          </div>
-          {lastSyncTime && (
-            <span className="text-[11px] text-amber-700 font-mono">
-              Last synced: {lastSyncTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-            </span>
-          )}
-        </div>
-      )}
-
-      {/* 2. Metric Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-        <div
-          onClick={() => setFilter('ACTIVE')}
-          className={`p-4 rounded-2xl border cursor-pointer transition shadow-xs ${
-            filter === 'ACTIVE'
-              ? 'bg-white border-amber-400 ring-2 ring-amber-400/30 shadow-md'
-              : 'bg-white/90 border-neutral-200/90 hover:border-amber-300'
-          }`}
-        >
-          <span className="text-xs text-neutral-600 font-bold uppercase tracking-wider block">
-            Active Orders
-          </span>
-          <span className="text-2xl sm:text-3xl font-black text-neutral-950 mt-1 block">
-            {activeOrders.length}
-          </span>
-        </div>
-
-        <div
-          onClick={() => setFilter('AWAITING_PAYMENT')}
-          className={`p-4 rounded-2xl border cursor-pointer transition shadow-xs ${
-            filter === 'AWAITING_PAYMENT'
-              ? 'bg-amber-50 border-amber-400 ring-2 ring-amber-400/40 shadow-md'
-              : 'bg-white/90 border-neutral-200/90 hover:border-amber-300'
-          }`}
-        >
+      {/* 4 FoodScan Metric Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        {/* Total Sales Card (FoodScan Pink / Rose) */}
+        <div className="relative overflow-hidden p-5 rounded-2xl bg-gradient-to-br from-[#FF4F99] to-[#E63980] text-white shadow-md shadow-pink-500/10 transition hover:-translate-y-0.5 duration-200">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-amber-800 font-bold uppercase tracking-wider block">
-              Awaiting Payment
+            <span className="text-xs font-bold uppercase tracking-wider text-white/80">
+              Total Revenue
             </span>
-            {awaitingPaymentCount > 0 && (
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping"></span>
-            )}
+            <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-xs flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-white" />
+            </div>
           </div>
-          <span className="text-2xl sm:text-3xl font-black text-amber-600 mt-1 block">
-            {awaitingPaymentCount}
-          </span>
+          <div className="mt-3">
+            <h3 className="text-2xl sm:text-3xl font-black tracking-tight">
+              {overview?.totalSalesFormatted || '₹0'}
+            </h3>
+            <p className="text-[11px] font-medium text-white/80 mt-1 flex items-center gap-1.5">
+              <span>Today:</span>
+              <strong className="text-white font-bold">{overview?.todaySalesFormatted || '₹0'}</strong>
+            </p>
+          </div>
         </div>
 
-        <div
-          onClick={() => setFilter('PREPARING')}
-          className={`p-4 rounded-2xl border cursor-pointer transition shadow-xs ${
-            filter === 'PREPARING'
-              ? 'bg-blue-50 border-blue-400 ring-2 ring-blue-400/30 shadow-md'
-              : 'bg-white/90 border-neutral-200/90 hover:border-blue-300'
-          }`}
-        >
-          <span className="text-xs text-blue-800 font-bold uppercase tracking-wider block">
-            Kitchen (Cooking)
-          </span>
-          <span className="text-2xl sm:text-3xl font-black text-blue-600 mt-1 block">
-            {preparingCount}
-          </span>
+        {/* Total Orders Card (FoodScan Portage / Indigo) */}
+        <div className="relative overflow-hidden p-5 rounded-2xl bg-gradient-to-br from-[#8262FE] to-[#633DF8] text-white shadow-md shadow-indigo-500/10 transition hover:-translate-y-0.5 duration-200">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-white/80">
+              Total Orders
+            </span>
+            <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-xs flex items-center justify-center">
+              <ShoppingBag className="w-5 h-5 text-white" />
+            </div>
+          </div>
+          <div className="mt-3">
+            <h3 className="text-2xl sm:text-3xl font-black tracking-tight">
+              {overview?.totalOrdersCount ?? 0}
+            </h3>
+            <p className="text-[11px] font-medium text-white/80 mt-1 flex items-center gap-1.5">
+              <span>Today:</span>
+              <strong className="text-white font-bold">{overview?.todayOrdersCount ?? 0} orders</strong>
+            </p>
+          </div>
         </div>
 
-        <div
-          onClick={() => setFilter('READY')}
-          className={`p-4 rounded-2xl border cursor-pointer transition shadow-xs ${
-            filter === 'READY'
-              ? 'bg-emerald-50 border-emerald-400 ring-2 ring-emerald-400/30 shadow-md'
-              : 'bg-white/90 border-neutral-200/90 hover:border-emerald-300'
-          }`}
-        >
-          <span className="text-xs text-emerald-800 font-bold uppercase tracking-wider block">
-            Ready for Pickup
-          </span>
-          <span className="text-2xl sm:text-3xl font-black text-emerald-600 mt-1 block">
-            {readyCount}
-          </span>
+        {/* Total Customers Card (FoodScan Cornflower Blue) */}
+        <div className="relative overflow-hidden p-5 rounded-2xl bg-gradient-to-br from-[#567DFF] to-[#3460FC] text-white shadow-md shadow-blue-500/10 transition hover:-translate-y-0.5 duration-200">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-white/80">
+              Total Customers
+            </span>
+            <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-xs flex items-center justify-center">
+              <Users className="w-5 h-5 text-white" />
+            </div>
+          </div>
+          <div className="mt-3">
+            <h3 className="text-2xl sm:text-3xl font-black tracking-tight">
+              {overview?.totalCustomersCount ?? 0}
+            </h3>
+            <p className="text-[11px] font-medium text-white/80 mt-1">
+              Registered & walk-in customer base
+            </p>
+          </div>
+        </div>
+
+        {/* Total Menu Items Card (FoodScan Heliotrope / Purple) */}
+        <div className="relative overflow-hidden p-5 rounded-2xl bg-gradient-to-br from-[#A953FF] to-[#8E2BE2] text-white shadow-md shadow-purple-500/10 transition hover:-translate-y-0.5 duration-200">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-white/80">
+              Menu Items
+            </span>
+            <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-xs flex items-center justify-center">
+              <UtensilsCrossed className="w-5 h-5 text-white" />
+            </div>
+          </div>
+          <div className="mt-3">
+            <h3 className="text-2xl sm:text-3xl font-black tracking-tight">
+              {overview?.totalMenuItemsCount ?? 0}
+            </h3>
+            <p className="text-[11px] font-medium text-white/80 mt-1">
+              Active items in catalog
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* 3. Filter Navigation Tabs */}
-      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 border-b border-neutral-200">
-        {[
-          { key: 'ACTIVE', label: `Active (${activeOrders.length})` },
-          { key: 'AWAITING_PAYMENT', label: `Awaiting Payment (${awaitingPaymentCount})` },
-          { key: 'PREPARING', label: `Kitchen (${preparingCount})` },
-          { key: 'READY', label: `Ready (${readyCount})` },
-          { key: 'COMPLETED', label: 'Completed' },
-          { key: 'ALL', label: `All Today (${orders.length})` },
-        ].map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setFilter(tab.key)}
-            className={`py-2 px-4 rounded-xl text-xs font-bold whitespace-nowrap transition shadow-xs cursor-pointer ${
-              filter === tab.key
-                ? 'bg-amber-400 text-neutral-950 font-black shadow-sm border border-amber-500/40'
-                : 'bg-white text-neutral-700 hover:text-neutral-950 hover:bg-amber-50 border border-neutral-200/80'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      {/* Payment Split & Quick Navigation */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Today's Payment Settlement */}
+        <div className="p-6 rounded-2xl bg-white border border-[#EFF0F6] shadow-xs space-y-4">
+          <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
+            <h3 className="text-sm font-bold text-neutral-900">Today's Settlements</h3>
+            <span className="text-[11px] font-semibold text-neutral-400">Cash vs UPI</span>
+          </div>
 
-      {/* 4. Order Cards Grid */}
-      {filteredOrders.length === 0 ? (
-        <div className="text-center py-20 bg-white rounded-3xl border border-neutral-200/90 shadow-sm space-y-3">
-          <ChefHat className="w-10 h-10 text-neutral-400 mx-auto" />
-          <p className="text-sm text-neutral-600 font-semibold">No orders in this status.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filteredOrders.map((order) => {
-            const ageMins = getAgeMins(order.createdAt);
-            const isUnpaid = order.status === 'AWAITING_PAYMENT';
-            const orderTokenLabel = order.takeawayToken || `#${order.orderNumber}`;
-
-            return (
-              <div
-                key={order.id}
-                className={`rounded-3xl border p-5 flex flex-col justify-between gap-4 transition shadow-sm hover:shadow-md bg-white ${
-                  isUnpaid
-                    ? ageMins >= 10
-                      ? 'border-rose-400 ring-1 ring-rose-300'
-                      : 'border-amber-400'
-                    : order.status === 'READY'
-                    ? 'border-emerald-400 ring-1 ring-emerald-300'
-                    : 'border-neutral-200/90'
-                }`}
-              >
-                {/* Header: Token, Type & Age */}
-                <div className="space-y-2">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <div className="text-3xl font-black text-amber-500 tracking-tight">
-                          #{order.orderNumber}
-                        </div>
-                        <button
-                          onClick={() => callOrderOutLoud(order.orderNumber, order.customerName)}
-                          className="py-1 px-2.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-black transition flex items-center gap-1 cursor-pointer shadow-2xs"
-                          title="Staff Pukaro Order"
-                        >
-                          <Volume2 className="w-3.5 h-3.5 text-amber-700" />
-                          <span>Pukaro</span>
-                        </button>
-                      </div>
-                      <div className="flex flex-col gap-1 mt-0.5">
-                        <span className="text-xs font-bold text-neutral-800 flex items-center gap-1.5">
-                          <span className="text-amber-500 font-black">👤</span>
-                          <span>{order.customerName || (order.tableNumber ? `Table ${order.tableNumber}` : 'Customer')}</span>
-                        </span>
-                        {order.customerPhone && (
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[11px] text-neutral-600 font-medium">
-                              📱 {order.customerPhone}
-                            </span>
-                            <a
-                              href={`https://wa.me/91${order.customerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(
-                                `Hi ${order.customerName || ''}, Wrap Nation here regarding your order #${order.orderNumber}!`
-                              )}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-[10px] text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full font-bold inline-flex items-center gap-1"
-                            >
-                              <span>WhatsApp</span>
-                            </a>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="text-right space-y-1">
-                      <span
-                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold ${
-                          isUnpaid
-                            ? ageMins >= 10
-                              ? 'bg-rose-100 text-rose-800 border border-rose-300 animate-pulse'
-                              : 'bg-amber-100 text-amber-800 border border-amber-300'
-                            : order.status === 'READY'
-                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                            : 'bg-neutral-100 text-neutral-700 border border-neutral-200'
-                        }`}
-                      >
-                        <Clock className="w-3 h-3" />
-                        <span>{ageMins}m ago</span>
-                      </span>
-
-                      <div className="text-sm font-black text-neutral-950">
-                        {formatPaise(order.total)}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Customer hint highlight if customer entered last 4 digits */}
-                  {order.customerUtrHint && (
-                    <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs flex items-center justify-between">
-                      <span className="font-bold">Customer UTR Hint:</span>
-                      <span className="font-mono font-black text-sm bg-white px-2 py-0.5 rounded border border-amber-300 text-neutral-950">
-                        {order.customerUtrHint}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Cooking Note if any */}
-                  {order.cookingNote && (
-                    <div className="p-2.5 rounded-xl bg-amber-50/60 border border-amber-200 text-amber-900 text-xs flex items-start gap-1.5">
-                      <FileText className="w-3.5 h-3.5 shrink-0 mt-0.5 text-amber-600" />
-                      <span>Note: {order.cookingNote}</span>
-                    </div>
-                  )}
+          <div className="space-y-3">
+            <div className="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-100 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center">
+                  <Banknote className="w-4 h-4" />
                 </div>
-
-                {/* Items List */}
-                <div className="py-2.5 border-t border-b border-neutral-200/90 space-y-2 text-xs flex-1">
-                  {order.orderItems.map((item) => {
-                    let addOns: Array<{ name: string }> = [];
-                    try {
-                      addOns = JSON.parse(item.addOnsJson || '[]');
-                    } catch {}
-
-                    return (
-                      <div key={item.id} className="flex justify-between items-start gap-2">
-                        <div className="space-y-0.5">
-                          <span className="font-bold text-neutral-900">
-                            {item.quantity}× {item.itemName}
-                          </span>
-                          {item.variantName && (
-                            <div className="text-[11px] text-amber-700 pl-3 font-semibold">
-                              • {item.variantName}
-                            </div>
-                          )}
-                          {addOns.length > 0 && (
-                            <div className="text-[11px] text-neutral-600 pl-3">
-                              + {addOns.map((a) => a.name).join(', ')}
-                            </div>
-                          )}
-                        </div>
-                        <span className="text-neutral-700 font-mono font-bold">
-                          {formatPaise(item.subtotal)}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Status Actions */}
-                <div className="space-y-2 pt-1">
-                  {isUnpaid ? (
-                    <button
-                      onClick={() => setSelectedOrderForPayment(order)}
-                      className="w-full py-3 px-4 rounded-xl bg-amber-400 hover:bg-amber-300 active:bg-amber-500 text-neutral-950 font-black text-xs uppercase tracking-wider shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
-                    >
-                      <DollarSign className="w-4 h-4 stroke-[3]" />
-                      <span>Mark Paid (UPI / Cash)</span>
-                    </button>
-                  ) : order.status === 'PAID' || order.status === 'PREPARING' ? (
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        onClick={() => handleUpdateStatus(order.id, 'READY', order.orderNumber, order.customerName)}
-                        className="py-3 px-3 rounded-xl bg-amber-400 hover:bg-amber-300 active:bg-amber-500 text-neutral-950 font-black text-xs uppercase tracking-wider shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
-                      >
-                        <Bell className="w-4 h-4 stroke-[3]" />
-                        <span>Ready & Pukaro</span>
-                      </button>
-                      <button
-                        onClick={() => handleUpdateStatus(order.id, 'COMPLETED')}
-                        className="py-3 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600 text-neutral-950 font-black text-xs uppercase tracking-wider shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
-                      >
-                        <CheckCheck className="w-4 h-4 stroke-[3]" />
-                        <span>Completed</span>
-                      </button>
-                    </div>
-                  ) : order.status === 'READY' ? (
-                    <div className="space-y-2">
-                      <button
-                        onClick={() => callOrderOutLoud(order.orderNumber, order.customerName)}
-                        className="w-full py-2.5 px-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-neutral-950 font-black text-xs uppercase tracking-wider shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer"
-                      >
-                        <Volume2 className="w-4 h-4 text-neutral-950" />
-                        <span>📢 Pukaro Order #{order.orderNumber}</span>
-                      </button>
-                      <button
-                        onClick={() => handleUpdateStatus(order.id, 'COMPLETED')}
-                        className="w-full py-3 px-4 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-amber-400 font-black text-xs uppercase tracking-wider shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
-                      >
-                        <CheckCheck className="w-4 h-4" />
-                        <span>Complete & Deliver</span>
-                      </button>
-                      {order.customerPhone && (
-                        <a
-                          href={`https://wa.me/91${order.customerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(
-                            `🌯 *Wrap Nation — Order Ready for Pickup!* ⚡\n\nHi ${order.customerName || 'Customer'},\nYour *Order #${order.orderNumber}* is fresh & packed ready!\n\nPlease collect your food from the counter.\nThank you!`
-                          )}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-full py-2 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-800 font-bold text-[11px] transition flex items-center justify-center gap-1.5 shadow-2xs"
-                        >
-                          <span>💬 Send &ldquo;Order Ready&rdquo; on WhatsApp</span>
-                        </a>
-                      )}
-                    </div>
-                  ) : order.status === 'COMPLETED' ? (
-                    <div className="space-y-1.5">
-                      <div className="py-2 px-3 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-bold flex items-center justify-between">
-                        <span className="flex items-center gap-1.5">
-                          <CheckCheck className="w-4 h-4 text-emerald-600" />
-                          <span>Order Delivered</span>
-                        </span>
-                        {order.customerPhone && (
-                          <a
-                            href={`https://wa.me/91${order.customerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(
-                              `🌯 *Wrap Nation — Order Delivered!* ⚡\n\nHi ${order.customerName || 'Customer'},\nYour *Order #${order.orderNumber}* has been served & delivered!\n\nThank you for visiting Wrap Nation! We hope you loved your fresh crispy wraps! 🌯\n\n⭐ Had a great meal? Leave us a review on Google Maps:\nhttps://share.google/K02BROH8ES5iuiEmh`
-                            )}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[10px] bg-emerald-600 hover:bg-emerald-700 text-white py-1.5 px-3 rounded-lg font-black transition flex items-center gap-1 shadow-2xs cursor-pointer"
-                          >
-                            <span>WhatsApp Delivery Msg 💬</span>
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  ) : null}
-
-                  {/* Secondary Actions: Reprint Slip */}
-                  <div className="flex items-center justify-between text-[11px] text-neutral-600 pt-1">
-                    <span className="uppercase font-bold text-neutral-700">
-                      {order.paymentMethod} • {order.paymentStatus}
-                    </span>
-
-                    <button
-                      onClick={() => handleReprint(order.id)}
-                      disabled={reprintingOrderId === order.id}
-                      className="hover:text-amber-700 font-bold flex items-center gap-1 p-1 transition cursor-pointer text-neutral-700"
-                    >
-                      <Printer className="w-3.5 h-3.5" />
-                      <span>{reprintingOrderId === order.id ? 'Queued...' : 'Reprint Bill'}</span>
-                    </button>
-                  </div>
+                <div>
+                  <p className="text-xs font-bold text-emerald-950">Cash Register</p>
+                  <p className="text-[10px] text-emerald-700">Handled at counter</p>
                 </div>
               </div>
-            );
-          })}
-        </div>
-      )}
+              <span className="text-sm font-black text-emerald-900">
+                {overview?.cashRevenueFormatted || '₹0'}
+              </span>
+            </div>
 
-      {/* Mark Paid Modal */}
-      {selectedOrderForPayment && (
-        <MarkPaidModal
-          order={selectedOrderForPayment}
-          isOpen={!!selectedOrderForPayment}
-          onClose={() => setSelectedOrderForPayment(null)}
-          onSuccess={() => fetchOrders()}
-        />
-      )}
+            <div className="p-3.5 rounded-xl bg-blue-50/70 border border-blue-100 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-blue-500 text-white flex items-center justify-center">
+                  <CreditCard className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-blue-950">Digital UPI QR</p>
+                  <p className="text-[10px] text-blue-700">Instant scan & pay</p>
+                </div>
+              </div>
+              <span className="text-sm font-black text-blue-900">
+                {overview?.upiRevenueFormatted || '₹0'}
+              </span>
+            </div>
+          </div>
+
+          <div className="pt-2">
+            <Link
+              href="/admin/reports"
+              className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold text-neutral-700 hover:bg-neutral-50 border border-neutral-200 transition"
+            >
+              <span>View Full Reconciliation</span>
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </div>
+
+        {/* Most Popular Items (Top 5) */}
+        <div className="lg:col-span-2 p-6 rounded-2xl bg-white border border-[#EFF0F6] shadow-xs space-y-4">
+          <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
+            <div>
+              <h3 className="text-sm font-bold text-neutral-900">Top Selling Wraps & Dishes</h3>
+              <p className="text-[11px] text-neutral-400">Items ordered most frequently</p>
+            </div>
+            <Link
+              href="/admin/menu"
+              className="text-xs font-semibold text-amber-600 hover:text-amber-700 flex items-center gap-1"
+            >
+              <span>Menu Catalog</span>
+              <ArrowUpRight className="w-3 h-3" />
+            </Link>
+          </div>
+
+          {popularItems.length === 0 ? (
+            <p className="text-xs text-neutral-400 py-8 text-center">
+              No orders recorded yet today. Top sellers will display here.
+            </p>
+          ) : (
+            <div className="space-y-2.5">
+              {popularItems.map((item, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 rounded-xl bg-neutral-50/70 border border-neutral-100 hover:bg-neutral-50 transition"
+                >
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black ${
+                        index === 0
+                          ? 'bg-amber-400 text-neutral-950'
+                          : index === 1
+                          ? 'bg-neutral-300 text-neutral-800'
+                          : 'bg-neutral-200 text-neutral-700'
+                      }`}
+                    >
+                      #{index + 1}
+                    </span>
+                    <span className="text-xs font-bold text-neutral-800">{item.name}</span>
+                  </div>
+
+                  <div className="flex items-center gap-4 text-right">
+                    <span className="text-xs font-semibold text-neutral-500">
+                      {item.quantity} sold
+                    </span>
+                    <span className="text-xs font-black text-neutral-900 min-w-[70px]">
+                      {item.revenueFormatted}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Recent 10 Orders Table */}
+      <div className="p-6 rounded-2xl bg-white border border-[#EFF0F6] shadow-xs space-y-4">
+        <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
+          <div>
+            <h3 className="text-sm font-bold text-neutral-900">Recent Customer Orders</h3>
+            <p className="text-[11px] text-neutral-400">Real-time order feed</p>
+          </div>
+          <Link
+            href="/admin/orders"
+            className="text-xs font-semibold text-amber-600 hover:text-amber-700 flex items-center gap-1"
+          >
+            <span>Open Orders Board</span>
+            <ArrowUpRight className="w-3 h-3" />
+          </Link>
+        </div>
+
+        {recentOrders.length === 0 ? (
+          <p className="text-xs text-neutral-400 py-10 text-center">No orders yet.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-neutral-100 text-[11px] font-bold text-neutral-400 uppercase tracking-wider">
+                  <th className="py-2.5 px-3">Order Token</th>
+                  <th className="py-2.5 px-3">Customer</th>
+                  <th className="py-2.5 px-3">Items</th>
+                  <th className="py-2.5 px-3">Type</th>
+                  <th className="py-2.5 px-3">Status</th>
+                  <th className="py-2.5 px-3">Amount</th>
+                  <th className="py-2.5 px-3 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-neutral-100">
+                {recentOrders.map((order) => (
+                  <tr key={order.id} className="hover:bg-neutral-50/80 transition">
+                    <td className="py-3 px-3">
+                      <span className="font-extrabold text-neutral-900 text-xs">
+                        #{order.orderNumber}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3">
+                      <p className="font-semibold text-neutral-800">
+                        {order.customerName || 'Guest'}
+                      </p>
+                      <p className="text-[10px] text-neutral-400">{order.customerPhone || '—'}</p>
+                    </td>
+                    <td className="py-3 px-3 text-neutral-600 max-w-xs truncate">
+                      {order.itemsSummary || '—'}
+                    </td>
+                    <td className="py-3 px-3">
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-neutral-100 text-neutral-700">
+                        {order.type}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3">
+                      <span
+                        className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                          order.status === 'READY'
+                            ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                            : order.status === 'COMPLETED'
+                            ? 'bg-emerald-100 text-emerald-900'
+                            : order.status === 'PREPARING'
+                            ? 'bg-blue-100 text-blue-900'
+                            : 'bg-neutral-100 text-neutral-700'
+                        }`}
+                      >
+                        {order.status}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 font-extrabold text-neutral-900">
+                      {order.totalFormatted}
+                    </td>
+                    <td className="py-3 px-3 text-right">
+                      <Link
+                        href="/admin/orders"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-[11px] font-bold transition"
+                      >
+                        <Eye className="w-3 h-3" />
+                        <span>View</span>
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
